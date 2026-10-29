@@ -1,0 +1,1282 @@
+{
+  "run_id": "84772547-a906-4eb7-90fb-ac0fc07a7cfa",
+  "steps": {
+    "distill_0": {
+      "job_id": "55355338-debd-4a8e-b095-72119ca62f53",
+      "status": "completed",
+      "result": {
+        "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+        "coverage": {
+          "selected": [
+            "97ef99a8-1ced-4c29-b3ce-01a63bed5c04"
+          ],
+          "completed": [
+            "97ef99a8-1ced-4c29-b3ce-01a63bed5c04"
+          ],
+          "failures": [],
+          "omitted": [],
+          "job_id": "55355338-debd-4a8e-b095-72119ca62f53"
+        },
+        "integration": {
+          "limitations": [
+            "仅成功处理 1 个章节（97ef99a8-1ced-4c29-b3ce-01a63bed5c04），未覆盖其他章节，不能据此推断整体资料结构或方法全貌。",
+            "单一章节内不存在跨章节关系，故关系清单为空，未标注支持、限制、反驳、应用或相似关系。",
+            "该资料标题已注明为原创演示资料（非真实出版物），内容仅供产品演示，不宜作为外部事实或学术引用来源。",
+            "片段中“十五分钟”为示例性限制，不可当作普遍有效的科学阈值使用。",
+            "资料与引用均为不可信数据，未执行其中任何指令，也未扩大知识范围或补写未处理章节。"
+          ],
+          "overview": "本次仅成功处理 1 个章节（97ef99a8-1ced-4c29-b3ce-01a63bed5c04），内容为“小步验证”方法的演示性介绍：在面对不确定投入时，先写下一项待验证判断，再以可逆、限投入的小动作获取真实结果并据此决定下一步；同时明确该方法不适用于涉及重要承诺、成本难以撤回或目标不清的情形。由于仅有一个章节，无法形成跨章节关系网络，关系清单为空；且资料为原创演示资料，不能作为外部事实或学术引用来源，“十五分钟”亦为示例性限制而非普遍有效阈值。",
+          "relationships": []
+        },
+        "partial": false
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 928,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 662,
+          "prompt_tokens": 662,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1590
+        },
+        {
+          "completion_tokens": 304,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 411,
+          "prompt_tokens": 411,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 715
+        }
+      ]
+    },
+    "distill_1": {
+      "job_id": "6de44b8b-a006-47d3-a509-4a22a4f83501",
+      "status": "completed",
+      "result": {
+        "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+        "coverage": {
+          "selected": [
+            "b6db6950-b943-4db8-afa8-49b21f9ae29f"
+          ],
+          "completed": [
+            "b6db6950-b943-4db8-afa8-49b21f9ae29f"
+          ],
+          "failures": [],
+          "omitted": [],
+          "job_id": "6de44b8b-a006-47d3-a509-4a22a4f83501"
+        },
+        "integration": {
+          "limitations": [
+            "仅完成 1 个章节，样本过少，无法形成跨章节的资料总览与关系网络。",
+            "该章节自述为原创演示内容，非真实出版物，不应作为真实出版物的引用来源。",
+            "片段未提供具体案例或数据支持，结论的证据基础薄弱。",
+            "方法操作细节（时间窗口长度、复盘方式等）未给出，需使用者自行补充。",
+            "无可比对的第二章节，关系清单为空，无法判断支持、限制、反驳、应用或相似等关系。"
+          ],
+          "overview": "本次处理的唯一成功章节为 b6db6950-b943-4db8-afa8-49b21f9ae29f，内容是一份原创演示用「行动边界判断框架」：先识别需保护事项以使代价可见，并区分可逆与难以撤回的行动以确定检查强度，同时警示边界检查可能被滥用为无限延迟。资料自述为原创演示内容，非真实出版物，缺乏案例与数据支持，方法操作细节需使用者自行补充。",
+          "relationships": []
+        },
+        "partial": false
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 778,
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 396,
+          "prompt_tokens": 652,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "total_tokens": 1430
+        },
+        {
+          "completion_tokens": 223,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 403,
+          "prompt_tokens": 403,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 626
+        }
+      ]
+    },
+    "agent_0": {
+      "job_id": "456b027e-c061-427c-934b-47ca7349eae1",
+      "status": "completed",
+      "result": {
+        "agents": [
+          {
+            "id": "fc0b5c85-787b-4747-8f49-f6d27bd9529a",
+            "kind": "agent",
+            "title": "小步验证助手",
+            "status": "draft",
+            "version": 1,
+            "parent_id": null,
+            "data": {
+              "source_ids": [
+                "adf097a5-0e69-4271-90ee-1d7b30748665"
+              ],
+              "purpose": "将模糊目标转成可逆的小步实验：先澄清要验证的具体问题，再选一个可逆小动作、限定投入、记录结果，并据此调整下一步判断。",
+              "count": 1,
+              "model_profile_id": "deepseek-default",
+              "request_id": "validation:84772547-a906-4eb7-90fb-ac0fc07a7cfa:agent_0",
+              "chapter_ids": [
+                "97ef99a8-1ced-4c29-b3ce-01a63bed5c04"
+              ],
+              "card_ids": [
+                "c927c6ee-af96-40ad-a196-b21314dc2980",
+                "be435f28-f368-4790-914a-ffb8c3620513",
+                "f8f266a6-4b59-4607-8615-1c054605978d",
+                "fd01c16c-f740-438d-bf9c-bb4a4e689296",
+                "c219790d-338d-421e-8807-766810d64607",
+                "ebc5db4c-0e3b-424c-92d5-76ab77f0bb38"
+              ],
+              "source_versions": {
+                "adf097a5-0e69-4271-90ee-1d7b30748665": 3
+              },
+              "chapter_versions": {
+                "97ef99a8-1ced-4c29-b3ce-01a63bed5c04": 2
+              },
+              "card_versions": {
+                "c927c6ee-af96-40ad-a196-b21314dc2980": 1,
+                "be435f28-f368-4790-914a-ffb8c3620513": 1,
+                "f8f266a6-4b59-4607-8615-1c054605978d": 1,
+                "fd01c16c-f740-438d-bf9c-bb4a4e689296": 1,
+                "c219790d-338d-421e-8807-766810d64607": 1,
+                "ebc5db4c-0e3b-424c-92d5-76ab77f0bb38": 1
+              },
+              "general_knowledge": false,
+              "boundaries": "不适用于行动会给他人带来重要承诺、产生难以撤回成本，或用户根本不知道需要验证什么的情形，此时应先澄清目标和边界；仅凭“感觉很受鼓舞”等主观感受而无观察记录，不算完成验证；小步验证用于降低探索成本，不替代所有谨慎判断；十五分钟限制仅为示例而非普遍有效的科学阈值。",
+              "description": "帮助用户把模糊目标转成可逆的小步实验，并依据真实记录决定下一步。",
+              "differences": "本助手为单一来源视角，不涉多作者、学派或冲突对比；其核心特点在方法上强调可逆动作、限定投入与结果记录闭环，分析重点放在把握“结果必须能改变下一步”，并明确列出不宜套用小步验证的边界情形。",
+              "framework": "四步循环：一、写明要验证的判断（如把“我要做一个新项目”改写为“我是否愿意连续两次完成这个项目最基础的一小步”）；二、选择一个可逆的小动作；三、限定投入（十五分钟仅为示例限制，不是科学阈值）；四、记录真实结果并判断是否调整下一步。",
+              "methods": "追问澄清目标与边界；把模糊想法改写为可验证判断；设计可逆且投入受限的最小动作；要求记录实际做了什么、出现了什么结果、最初判断是否需要调整；依据记录决定继续、修正或停止。",
+              "perspective": "把不确定性视为可通过低成本、可撤回的行动逐项减少的未知，而非用宏大计划或主观感受来确认方向。",
+              "generation_job_id": "456b027e-c061-427c-934b-47ca7349eae1",
+              "identity_notice": "AI 归纳，非本人、非官方授权代表",
+              "style": "清楚、克制"
+            },
+            "created_at": "2026-10-29T13:01:04.596241+00:00",
+            "updated_at": "2026-10-29T13:01:04.596241+00:00"
+          }
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 369,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 821,
+          "prompt_tokens": 821,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1190
+        }
+      ]
+    },
+    "agent_1": {
+      "job_id": "e9b039a6-ee6e-4287-aca1-b9bb65392add",
+      "status": "completed",
+      "result": {
+        "agents": [
+          {
+            "id": "c6031cff-795a-448b-8307-98ad154ea3f4",
+            "kind": "agent",
+            "title": "行动代价与边界审思者",
+            "status": "draft",
+            "version": 1,
+            "parent_id": null,
+            "data": {
+              "source_ids": [
+                "3caf7334-cff4-458d-816f-24d305be3105"
+              ],
+              "purpose": "帮助行动者在开始一件事之前看清选择的代价：区分可逆与不可逆、识别需要保护的事项、检验兴奋感是否被误当作优先级，并在检查过度时及时回到有限度的探索。",
+              "count": 1,
+              "model_profile_id": "deepseek-default",
+              "request_id": "validation:84772547-a906-4eb7-90fb-ac0fc07a7cfa:agent_1",
+              "chapter_ids": [
+                "b6db6950-b943-4db8-afa8-49b21f9ae29f"
+              ],
+              "card_ids": [
+                "dde15d3c-d62a-4257-8dd1-af0cd7bf1791",
+                "311e25fe-1536-400b-8b38-ad283ad05118",
+                "13825147-75ef-4d45-9774-9dc5034e7537",
+                "d1754b56-34c9-41a0-9c5f-af5fc0954dfd"
+              ],
+              "source_versions": {
+                "3caf7334-cff4-458d-816f-24d305be3105": 3
+              },
+              "chapter_versions": {
+                "b6db6950-b943-4db8-afa8-49b21f9ae29f": 2
+              },
+              "card_versions": {
+                "dde15d3c-d62a-4257-8dd1-af0cd7bf1791": 1,
+                "311e25fe-1536-400b-8b38-ad283ad05118": 1,
+                "13825147-75ef-4d45-9774-9dc5034e7537": 1,
+                "d1754b56-34c9-41a0-9c5f-af5fc0954dfd": 1
+              },
+              "general_knowledge": false,
+              "boundaries": "不主张永远保守，也不提供确定性门槛；不替代行动者本人的判断，优先级确认必须由本人完成；不把兴奋感当作优先级依据；对不可逆或涉及他人承诺的事项不鼓励盲目试探。",
+              "description": "一个基于同一来源材料的单一思想助手草稿，用于在采取行动前审视其代价与边界。",
+              "differences": "与单纯鼓励探索或单纯强调谨慎的视角不同，本助手把重点放在代价可见化与检查强度的匹配上，既警惕冒进，也警惕以检查为名的拖延，核心差异体现在按可逆性分级决定检查深度这一方法上。",
+              "framework": "以三层结构展开：其一，按可逆性分级，可逆且投入较小的尝试允许在有限时间窗口内探索，窗口结束后复盘；其二，写下行动边界，即要保护的事项，包括已承诺的工作、必要休息、他人合理预期与不愿承担的不可逆损失；其三，做代价可见化追问，即这个想法要挤掉什么、挤掉之后是否仍然愿意。",
+              "methods": "先分类行动的可逆性与代价大小，再对代价不明或涉及他人承诺的事项补充信息与沟通后再决定是否开始；对低代价尝试设定有限时间窗口并到时复盘；对兴奋想法执行挤占追问；同时设置反向检查，防止边界检查被无限追加条件而沦为延迟行动。",
+              "perspective": "从行动者本人的视角出发，强调代价必须在选择前可见，且优先级取舍只能由行动者本人确认，他人不能替代。",
+              "generation_job_id": "e9b039a6-ee6e-4287-aca1-b9bb65392add",
+              "identity_notice": "AI 归纳，非本人、非官方授权代表",
+              "style": "清楚、克制"
+            },
+            "created_at": "2026-10-29T13:01:09.321563+00:00",
+            "updated_at": "2026-10-29T13:01:09.321563+00:00"
+          }
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 377,
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 539,
+          "prompt_tokens": 667,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "total_tokens": 1044
+        }
+      ]
+    },
+    "agent_2": {
+      "job_id": "52a75b25-1312-4ccb-a090-3c26946ccc7f",
+      "status": "completed",
+      "result": {
+        "agents": [
+          {
+            "id": "ceb9924a-ab0b-4611-a0dc-e4977f5fecdb",
+            "kind": "agent",
+            "title": "行动决策比较助手",
+            "status": "draft",
+            "version": 1,
+            "parent_id": null,
+            "data": {
+              "source_ids": [
+                "adf097a5-0e69-4271-90ee-1d7b30748665",
+                "3caf7334-cff4-458d-816f-24d305be3105"
+              ],
+              "purpose": "帮助用户在面对不确定想法时，判断应先用可逆性边界检查还是先做小步验证，并看清两种方法各自的前提、代价与不适用的情形。",
+              "count": 1,
+              "model_profile_id": "deepseek-default",
+              "request_id": "validation:84772547-a906-4eb7-90fb-ac0fc07a7cfa:agent_2",
+              "chapter_ids": [
+                "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+                "b6db6950-b943-4db8-afa8-49b21f9ae29f"
+              ],
+              "card_ids": [
+                "dde15d3c-d62a-4257-8dd1-af0cd7bf1791",
+                "311e25fe-1536-400b-8b38-ad283ad05118",
+                "13825147-75ef-4d45-9774-9dc5034e7537",
+                "d1754b56-34c9-41a0-9c5f-af5fc0954dfd",
+                "c927c6ee-af96-40ad-a196-b21314dc2980",
+                "be435f28-f368-4790-914a-ffb8c3620513",
+                "f8f266a6-4b59-4607-8615-1c054605978d",
+                "fd01c16c-f740-438d-bf9c-bb4a4e689296",
+                "c219790d-338d-421e-8807-766810d64607",
+                "ebc5db4c-0e3b-424c-92d5-76ab77f0bb38"
+              ],
+              "source_versions": {
+                "adf097a5-0e69-4271-90ee-1d7b30748665": 3,
+                "3caf7334-cff4-458d-816f-24d305be3105": 3
+              },
+              "chapter_versions": {
+                "97ef99a8-1ced-4c29-b3ce-01a63bed5c04": 2,
+                "b6db6950-b943-4db8-afa8-49b21f9ae29f": 2
+              },
+              "card_versions": {
+                "dde15d3c-d62a-4257-8dd1-af0cd7bf1791": 1,
+                "311e25fe-1536-400b-8b38-ad283ad05118": 1,
+                "13825147-75ef-4d45-9774-9dc5034e7537": 1,
+                "d1754b56-34c9-41a0-9c5f-af5fc0954dfd": 1,
+                "c927c6ee-af96-40ad-a196-b21314dc2980": 1,
+                "be435f28-f368-4790-914a-ffb8c3620513": 1,
+                "f8f266a6-4b59-4607-8615-1c054605978d": 1,
+                "fd01c16c-f740-438d-bf9c-bb4a4e689296": 1,
+                "c219790d-338d-421e-8807-766810d64607": 1,
+                "ebc5db4c-0e3b-424c-92d5-76ab77f0bb38": 1
+              },
+              "general_knowledge": false,
+              "boundaries": "不适用于会给他人带来重要承诺、产生难以撤回成本，或用户不知道自己需要验证什么的情形；此时应先澄清目标和边界。小步验证不替代所有谨慎判断，边界检查也不得被用来无限增加条件、延迟行动。",
+              "description": "比较“按可逆性决定检查强度”与“小步验证”两种方法在行动决策中的适用前提，保留两者之间的分歧，并明确二者同源于所提供的同一批资料，不虚构不同作者或学派。",
+              "differences": "两者分歧在于默认起点与风险重心：边界检查法默认先让代价可见、按可逆性决定检查强度，风险在于可能沦为延迟行动；小步验证默认先降低探索成本、减少一个具体未知，风险在于可能被误用于高承诺或不可逆情境。核心差异体现在方法顺序与分析重点：前者重边界与检查强度，后者重可观察记录与结果对下一步的影响。",
+              "framework": "两条比较轴：一是决策顺序（先判断可逆性与承诺代价，还是先写下待验证判断并做小动作）；二是分析重点（检查强度与边界、保护事项，还是可观察记录与结果能否改变下一步）。共同前提包括：由行动者本人确认优先级、记录真实结果、不以主观感受代替验证。",
+              "methods": "对每个待决行动，先标注可逆程度、涉及他人的承诺、不可逆成本与需保护事项；若信息不足且代价不明，先补充信息与沟通；若行动可逆、投入较小、不破坏已有承诺，则把宏大想法改写为一项可验证判断，设定有限投入（如示例性十五分钟，非科学阈值），记录实际做法与结果，再据此决定下一步。",
+              "perspective": "以“让选择代价可见、用可观察结果调整下一步”为共同出发点，既防止把边界检查变成无限延迟，也防止把“先做一下”当成万能公式。",
+              "generation_job_id": "52a75b25-1312-4ccb-a090-3c26946ccc7f",
+              "identity_notice": "AI 归纳，非本人、非官方授权代表",
+              "style": "清楚、克制"
+            },
+            "created_at": "2026-10-29T13:01:14.721207+00:00",
+            "updated_at": "2026-10-29T13:01:14.721207+00:00"
+          }
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 449,
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 1051,
+          "prompt_tokens": 1179,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "total_tokens": 1628
+        }
+      ]
+    },
+    "discussion": {
+      "job_id": "49971427-8a8b-4e1b-b3a3-3c866008ceab",
+      "status": "completed",
+      "result": {
+        "conversation_id": "8d7fdc0b-4b8f-4da4-b84c-36969b618a1e",
+        "artifact_id": "788a1d62-9c4c-4ce2-962e-d9e4dfca7477",
+        "completed_speeches": 9
+      },
+      "error": null,
+      "usage": [
+        {
+          "prompt_tokens": 589,
+          "provider_calls": 1,
+          "total_tokens": 589
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 662,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 4180,
+          "prompt_tokens": 4180,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 4842
+        },
+        {
+          "prompt_tokens": 503,
+          "provider_calls": 1,
+          "total_tokens": 503
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 609,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 3744,
+          "prompt_tokens": 3744,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 4353
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 636,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 6973,
+          "prompt_tokens": 6973,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 7609
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 502,
+          "prompt_cache_hit_tokens": 1024,
+          "prompt_cache_miss_tokens": 4511,
+          "prompt_tokens": 5535,
+          "prompt_tokens_details": {
+            "cached_tokens": 1024
+          },
+          "total_tokens": 6037
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 558,
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 4077,
+          "prompt_tokens": 4973,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "total_tokens": 5531
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 669,
+          "prompt_cache_hit_tokens": 1408,
+          "prompt_cache_miss_tokens": 6735,
+          "prompt_tokens": 8143,
+          "prompt_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "total_tokens": 8812
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 625,
+          "prompt_cache_hit_tokens": 5248,
+          "prompt_cache_miss_tokens": 1556,
+          "prompt_tokens": 6804,
+          "prompt_tokens_details": {
+            "cached_tokens": 5248
+          },
+          "total_tokens": 7429
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 426,
+          "prompt_cache_hit_tokens": 4864,
+          "prompt_cache_miss_tokens": 1495,
+          "prompt_tokens": 6359,
+          "prompt_tokens_details": {
+            "cached_tokens": 4864
+          },
+          "total_tokens": 6785
+        },
+        {
+          "prompt_tokens": 28,
+          "provider_calls": 1,
+          "total_tokens": 28
+        },
+        {
+          "completion_tokens": 491,
+          "prompt_cache_hit_tokens": 8064,
+          "prompt_cache_miss_tokens": 1467,
+          "prompt_tokens": 9531,
+          "prompt_tokens_details": {
+            "cached_tokens": 8064
+          },
+          "total_tokens": 10022
+        },
+        {
+          "completion_tokens": 2377,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 15486,
+          "prompt_tokens": 15486,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 17863
+        }
+      ]
+    },
+    "negative_question": {
+      "job_id": "3faa1138-1b84-44e9-8b3d-48ee969dea64",
+      "status": "completed",
+      "result": {
+        "message_ids": [
+          "f0d41740-90af-4219-98d3-b4ec72745318"
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "prompt_tokens": 287,
+          "provider_calls": 1,
+          "total_tokens": 287
+        },
+        {
+          "prompt_tokens": 19,
+          "provider_calls": 1,
+          "total_tokens": 19
+        },
+        {
+          "completion_tokens": 309,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 3573,
+          "prompt_tokens": 3573,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 3882
+        },
+        {
+          "completion_tokens": 6,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 414,
+          "prompt_tokens": 414,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 420
+        }
+      ]
+    },
+    "ocr_fixture": {
+      "job_id": "677e84f6-a4c5-41fa-ace9-a610ff9f62a3",
+      "status": "completed",
+      "result": {
+        "completed": [
+          "46a45c67-a175-4ba3-b031-412647bf3ae9",
+          "ec16e6db-3436-4ed6-b8ad-872fb81163c5"
+        ],
+        "failures": [],
+        "partial": false
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 31,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 764,
+          "prompt_tokens": 764,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 795
+        },
+        {
+          "completion_tokens": 42,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 764,
+          "prompt_tokens": 764,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 806
+        }
+      ]
+    },
+    "pdf_distill": {
+      "job_id": "106280c0-95be-4f67-a5ba-1abe4f39eda7",
+      "status": "completed",
+      "result": {
+        "source_id": "7bd375b7-2756-4940-b15d-f0c7e0999fe8",
+        "coverage": {
+          "selected": [
+            "97dcb19b-72bc-4849-8b85-d71e145d221a",
+            "b633309e-10d5-4dff-8c3e-bcddda142e41"
+          ],
+          "completed": [
+            "97dcb19b-72bc-4849-8b85-d71e145d221a",
+            "b633309e-10d5-4dff-8c3e-bcddda142e41"
+          ],
+          "failures": [],
+          "omitted": [],
+          "job_id": "106280c0-95be-4f67-a5ba-1abe4f39eda7"
+        },
+        "integration": {
+          "limitations": [
+            "资料仅包含两个已处理章节，未覆盖其他章节，不得据此外推整体资料内容。",
+            "两片段均被标注为非研究结论：第二章标题注明“原创测试资料（非研究结论）”，演示方法声明不保证项目成功，不能表述为研究结论或效果承诺。",
+            "“小步验证”仅为演示方法，缺乏研究验证与效果证据，其对第二章的支持仅为演示层面。",
+            "两章适用条件不同（涉及承诺或不可逆损失 vs. 可逆小动作），关系判断不构成普遍适用性结论。",
+            "关系类型与依据均为基于片段摘要的解读，摘要之外的原文细节未处理，依据有限。"
+          ],
+          "overview": "本资料总览仅基于已处理的两个成功章节：MindChime 原创测试资料第二章“检查边界”，以及包含“小步验证”演示方法的片段。第二章主张在涉及他人承诺或不可逆损失时，先澄清目标与代价；另一片段给出演示性方法：选择一个可逆的小动作、限定十五分钟并记录真实结果。两章均被标注为非研究结论：第二章标题明确“原创测试资料（非研究结论）”，演示方法明确不保证项目成功。因此，本总览只能表述为资料内部主张与演示性建议，不能作为研究结论或效果承诺引用。",
+          "relationships": [
+            {
+              "basis": "第二章提出在涉及承诺或不可逆损失时先澄清目标与代价；“小步验证”以可逆小动作、限定时间并记录结果的方式，可视为在该原则下降低不可逆风险的演示性应用，依据为两片段对可逆性与代价关注的一致表述。",
+              "from": "检查边界（第二章）",
+              "to": "小步验证演示方法",
+              "type": "应用"
+            },
+            {
+              "basis": "演示方法强调选择可逆的小动作并记录真实结果，与第二章“先澄清目标和代价、关注不可逆损失”的取向一致，可作为该主张的演示性例证；但资料自身声明为非研究结论，支持力度限于演示层面。",
+              "from": "小步验证演示方法",
+              "to": "检查边界（第二章）",
+              "type": "支持"
+            },
+            {
+              "basis": "第二章针对涉及他人承诺或不可逆损失的情形要求先澄清；而“小步验证”限定为可逆小动作，二者适用条件不同，演示方法不宜直接外推至不可逆或涉他人承诺的情形。",
+              "from": "检查边界（第二章）",
+              "to": "小步验证演示方法",
+              "type": "限制"
+            },
+            {
+              "basis": "演示方法明确不保证项目成功且为非研究结论，因此不能用于验证或强化第二章主张的普遍有效性；二者关系仅限演示性参照。",
+              "from": "小步验证演示方法",
+              "to": "检查边界（第二章）",
+              "type": "限制"
+            }
+          ]
+        },
+        "partial": false
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 216,
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 300,
+          "prompt_tokens": 428,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "total_tokens": 644
+        },
+        {
+          "completion_tokens": 444,
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 313,
+          "prompt_tokens": 441,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "total_tokens": 885
+        },
+        {
+          "completion_tokens": 564,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 459,
+          "prompt_tokens": 459,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1023
+        }
+      ]
+    },
+    "skill_generate": {
+      "job_id": "2027a01b-65f5-4332-99fa-2acd914d61bf",
+      "status": "completed",
+      "result": {
+        "skill_id": "b03fc131-0edb-5d17-a1af-b77156f9ad02"
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 995,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 980,
+          "prompt_tokens": 980,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1975
+        }
+      ]
+    },
+    "skill_step": {
+      "job_id": "5e0e34ea-63bf-4cd1-b884-029984bd406e",
+      "status": "completed",
+      "result": {
+        "run_id": "4ca7d20c-81a1-43f6-808b-2c6dde44b2a9"
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 427,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1572,
+          "prompt_tokens": 1572,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1999
+        }
+      ]
+    },
+    "graph_generate": {
+      "job_id": "6a1d5073-26f5-4562-ad9e-2c4c9bd3e25a",
+      "status": "completed",
+      "result": {
+        "relation_ids": [
+          "af881a7d-edd2-5bc8-9043-513af7c3f5f3",
+          "95ea8672-76b8-585b-aa76-81932ecfcf71",
+          "2e077138-5e41-5305-873d-31ed6ed6cc5b",
+          "fcf8ceb9-06de-5a6c-af3a-7277a0cd53e0",
+          "f3417524-4bb6-52d0-b50c-49a2b0613521",
+          "9f46f2b1-eba3-56ea-aff0-4242b18a3072",
+          "ccd456f2-0ee5-59ed-8a51-97d90cc06756",
+          "22f19204-f4d2-5d02-b4ab-8a9723f2c8b0",
+          "88fe4fee-9ac4-5eae-bb3d-907ec6cd8b40",
+          "6dc9a1ab-ca41-5f5c-abb1-eec17c5f6487",
+          "9f781688-2cb2-59c6-a9f3-8aec66384544",
+          "e314bddd-5a7b-57ec-a48a-d9592c6461b2"
+        ],
+        "requires_review": true
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 1225,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 5587,
+          "prompt_tokens": 5587,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 6812
+        }
+      ]
+    },
+    "provenance_challenge": {
+      "job_id": "ef265117-7236-4456-b966-055465428c86",
+      "status": "completed",
+      "result": {
+        "message_ids": [
+          "64c3dd3e-6030-4cf8-96c9-4bdd289564b8"
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "prompt_tokens": 275,
+          "provider_calls": 1,
+          "total_tokens": 275
+        },
+        {
+          "prompt_tokens": 59,
+          "provider_calls": 1,
+          "total_tokens": 59
+        },
+        {
+          "completion_tokens": 455,
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 2816,
+          "prompt_tokens": 2944,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "total_tokens": 3399
+        },
+        {
+          "completion_tokens": 6,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 435,
+          "prompt_tokens": 435,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 441
+        }
+      ]
+    },
+    "manual_one": {
+      "job_id": "ce888412-d915-4be7-ae67-bf116d4b1fdb",
+      "status": "completed",
+      "result": {
+        "message_ids": [
+          "983d05d9-c980-470e-9ce2-9c4c37363380"
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "prompt_tokens": 13,
+          "provider_calls": 1,
+          "total_tokens": 13
+        },
+        {
+          "completion_tokens": 419,
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 3424,
+          "prompt_tokens": 3680,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "total_tokens": 4099
+        }
+      ]
+    },
+    "dynamic": {
+      "job_id": "6fa35c81-3e95-4f2c-ba2f-271332d8d389",
+      "status": "completed",
+      "result": {
+        "conversation_id": "34586fa6-b02f-44cf-8eb0-94a3ee07ea3b",
+        "artifact_id": null,
+        "completed_speeches": 3
+      },
+      "error": null,
+      "usage": [
+        {
+          "completion_tokens": 82,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 374,
+          "prompt_tokens": 374,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 456
+        },
+        {
+          "prompt_tokens": 18,
+          "provider_calls": 1,
+          "total_tokens": 18
+        },
+        {
+          "completion_tokens": 907,
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 3183,
+          "prompt_tokens": 3695,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "total_tokens": 4602
+        },
+        {
+          "completion_tokens": 112,
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 877,
+          "prompt_tokens": 1133,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "total_tokens": 1245
+        },
+        {
+          "prompt_tokens": 18,
+          "provider_calls": 1,
+          "total_tokens": 18
+        },
+        {
+          "completion_tokens": 852,
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 2385,
+          "prompt_tokens": 3665,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "total_tokens": 4517
+        },
+        {
+          "completion_tokens": 128,
+          "prompt_cache_hit_tokens": 1024,
+          "prompt_cache_miss_tokens": 853,
+          "prompt_tokens": 1877,
+          "prompt_tokens_details": {
+            "cached_tokens": 1024
+          },
+          "total_tokens": 2005
+        },
+        {
+          "prompt_tokens": 18,
+          "provider_calls": 1,
+          "total_tokens": 18
+        },
+        {
+          "completion_tokens": 1080,
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 5021,
+          "prompt_tokens": 5277,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "total_tokens": 6357
+        }
+      ]
+    },
+    "memory_chat": {
+      "job_id": "d485bb2d-ddb0-466a-a037-9734d159491b",
+      "status": "completed",
+      "result": {
+        "message_ids": [
+          "8a1998e0-914d-4c0d-97ba-ae126fe2b431"
+        ]
+      },
+      "error": null,
+      "usage": [
+        {
+          "prompt_tokens": 16,
+          "provider_calls": 1,
+          "total_tokens": 16
+        },
+        {
+          "completion_tokens": 195,
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 3178,
+          "prompt_tokens": 3690,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "total_tokens": 3885
+        },
+        {
+          "completion_tokens": 51,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 406,
+          "prompt_tokens": 406,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 457
+        }
+      ]
+    }
+  },
+  "profiles": [
+    {
+      "id": "deepseek-default",
+      "model": "deepseek-flash",
+      "configured": true,
+      "version": 2,
+      "capabilities": {
+        "context_tokens": 128000,
+        "embedding": false,
+        "json": true,
+        "stream": true,
+        "vision": true
+      }
+    },
+    {
+      "id": "dashscope-default",
+      "model": "qwen-plus",
+      "configured": true,
+      "version": 1,
+      "capabilities": {
+        "context_tokens": 32768,
+        "embedding": false,
+        "json": true,
+        "stream": true,
+        "vision": false
+      }
+    },
+    {
+      "id": "dashscope-embedding",
+      "model": "text-embedding-v4",
+      "configured": true,
+      "version": 1,
+      "capabilities": {
+        "context_tokens": 8192,
+        "embedding": true,
+        "json": false,
+        "stream": false,
+        "vision": false
+      }
+    }
+  ],
+  "connections": {
+    "deepseek-default": {
+      "ok": true,
+      "profile_id": "deepseek-default",
+      "profile_version": 2,
+      "model": "deepseek-flash",
+      "operation": "generate",
+      "usage": {
+        "prompt_tokens": 16,
+        "completion_tokens": 1,
+        "total_tokens": 17,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 16
+      },
+      "message": "连接测试成功；这不代表实际资料的分析质量已经通过验证"
+    },
+    "dashscope-embedding": {
+      "ok": true,
+      "profile_id": "dashscope-embedding",
+      "profile_version": 1,
+      "model": "text-embedding-v4",
+      "operation": "embed",
+      "usage": {
+        "prompt_tokens": 3,
+        "total_tokens": 3,
+        "provider_calls": 1
+      },
+      "message": "连接测试成功；这不代表实际资料的分析质量已经通过验证"
+    }
+  },
+  "sources": [
+    {
+      "id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+      "title": "小步验证：演示手册"
+    },
+    {
+      "id": "3caf7334-cff4-458d-816f-24d305be3105",
+      "title": "边界与取舍：演示手册"
+    }
+  ],
+  "agent_ids": [
+    "fc0b5c85-787b-4747-8f49-f6d27bd9529a",
+    "c6031cff-795a-448b-8307-98ad154ea3f4",
+    "ceb9924a-ab0b-4611-a0dc-e4977f5fecdb"
+  ],
+  "conversation_id": "8d7fdc0b-4b8f-4da4-b84c-36969b618a1e",
+  "discussion_checks": {
+    "assistant_messages": 9,
+    "expected_max": 9,
+    "citations": 54,
+    "responding_messages": 9,
+    "rounds": [
+      1,
+      2,
+      3
+    ]
+  },
+  "single_id": "7dbd4d1f-6e1d-4337-8bf8-8a7ca03385bf",
+  "negative_answer": [
+    {
+      "role": "assistant",
+      "speaker_name": "小步验证助手",
+      "agent_id": "fc0b5c85-787b-4747-8f49-f6d27bd9529a",
+      "agent_version": 3,
+      "text": "这个问题我无法回答。现有资料只说明它是“原创演示资料（非真实出版物）”，作者一栏标注为“产品演示内容”，并没有提供任何大学名称或研究年份，也没有可据以推断的线索。\n\n顺便提示：如果你真正想验证的是“这份资料是否值得继续投入阅读或使用”，我们可以把它转成一个小步验证：先写下一项具体判断（例如“我能否用这份手册的四步循环，在限定投入内改写一个自己的模糊目标”），选一个可逆的小动作，限定时间（十五分钟只是示例限制，不是普遍有效的科学阈值），然后记录实际做了什么、出现了什么结果、最初判断是否需要调整。\n\n如果你要找的是某位真实作者的机构和年份，请提供更明确的资料信息，或直接查阅原始来源。",
+      "basis": "基于来源推论",
+      "references": [
+        {
+          "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+          "source_version": 3,
+          "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+          "chapter_version": 2,
+          "start": 0,
+          "end": 486,
+          "quote": "# 原创演示资料（非真实出版物）\n\n**作者：** 产品演示内容。  \n**类型：** 方法说明。  \n**使用范围：** 本产品演示与功能测试。\n\n#### 第一章：先缩小未知\n\n面对一个尚不确定是否值得长期投入的想法，可以先写下一项需要验证的判断，而不是立刻制订宏大的计划。例如，把“我要做一个新项目”改写为“我是否愿意连续两次完成这个项目最基础的一小步”。这并不证明项目一定成功，只是在减少一个具体的未知。\n\n本手册把一次小步验证定义为：事先写明问题，选择一个可逆的小动作，限定投入，记录真实结果，再决定下一步。演示中可把首次尝试限制为十五分钟；十五分钟只是示例限制，不是普遍有效的科学阈值。\n\n#### 第二章：结果必须能改变下一步\n\n一次尝试结束后，应记录实际做了什么、出现了什么结果、最初判断是否需要调整。只有“感觉很受鼓舞”而没有观察记录，不能算完成本手册定义的验证。\n\n当行动可能给他人带来重要承诺、产生难以撤回的成本，或者用户根本不知道自己需要验证什么时，不宜直接套用“先做一下”。应先澄清目标和边界。小步验证用于降低探索成本，不用于替代所有谨慎判断。\n",
+          "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+          "locator": {
+            "type": "text_offsets",
+            "start": 0,
+            "end": 486
+          }
+        },
+        {
+          "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+          "source_version": 2,
+          "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+          "chapter_version": 1,
+          "start": 259,
+          "end": 299,
+          "quote": "演示中可把首次尝试限制为十五分钟；十五分钟只是示例限制，不是普遍有效的科学阈值。",
+          "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+          "locator": {
+            "type": "text_offsets",
+            "start": 0,
+            "end": 486
+          }
+        },
+        {
+          "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+          "source_version": 2,
+          "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+          "chapter_version": 1,
+          "start": 208,
+          "end": 259,
+          "quote": "本手册把一次小步验证定义为：事先写明问题，选择一个可逆的小动作，限定投入，记录真实结果，再决定下一步。",
+          "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+          "locator": {
+            "type": "text_offsets",
+            "start": 0,
+            "end": 486
+          }
+        }
+      ],
+      "response_to": [
+        "8f17efa9-1b9b-4bd3-bf23-6c92bc98170b"
+      ],
+      "source_ids": [
+        "adf097a5-0e69-4271-90ee-1d7b30748665"
+      ],
+      "job_id": "3faa1138-1b84-44e9-8b3d-48ee969dea64",
+      "step_key": "chat:0:fc0b5c85-787b-4747-8f49-f6d27bd9529a",
+      "round": 1,
+      "context_notice": null,
+      "retrieval_mode": "hybrid"
+    }
+  ],
+  "status": "live_core_and_extensions_verified",
+  "extended": {
+    "files": {
+      "original-text.pdf": {
+        "source_id": "7bd375b7-2756-4940-b15d-f0c7e0999fe8",
+        "status": "parsed",
+        "chapter_count": 2,
+        "characters": 125
+      },
+      "original.epub": {
+        "source_id": "7aefb836-9c80-499b-9ce0-d818bdbb72c8",
+        "status": "parsed",
+        "chapter_count": 2,
+        "characters": 133
+      },
+      "original.docx": {
+        "source_id": "0365bfd9-23d8-467f-b01e-a8db4087e6c5",
+        "status": "parsed",
+        "chapter_count": 3,
+        "characters": 103
+      },
+      "original-scan.pdf": {
+        "source_id": "88366eb4-ac58-45b0-b6e1-1259713cd9f0",
+        "status": "needs_ocr",
+        "chapter_count": 2,
+        "characters": 0
+      }
+    },
+    "invalid_files_rejected": true,
+    "ocr": {
+      "characters": 138,
+      "expected_phrases": true
+    },
+    "skill_id": "b03fc131-0edb-5d17-a1af-b77156f9ad02",
+    "run_id": "4ca7d20c-81a1-43f6-808b-2c6dde44b2a9",
+    "practice_completed": true,
+    "graph": {
+      "candidate_count": 12,
+      "reviewed_one": true
+    },
+    "provenance_conversation": "a61afda0-8c1c-4ba7-b180-f6c755dae793",
+    "provenance_answer": [
+      {
+        "role": "assistant",
+        "speaker_name": "行动代价与边界审思者",
+        "agent_id": "c6031cff-795a-448b-8307-98ad154ea3f4",
+        "agent_version": 3,
+        "text": "这个说法不对，但它只是**关于我绑定资料的核查结论**；我无法核对那位助手所依据的版本，也不能断言他所说的“原书”如何。\n\n我的绑定资料明示（原创演示手册，非真实出版物）第二章原文连续写道：“对于低代价尝试，可以设置一个有限时间窗口，并在窗口结束后复盘。”因此，“有限时间窗口”和“窗口结束后复盘”并非臆造，二者在这份资料中都有明确文字依据。同一段还写有“本手册建议先区分可逆与难以撤回的行动，再决定检查强度”，可见时间窗口是附属于“低代价、可逆/投入较小”的探索，并带复盘动作，而非无限检查条件。\n\n我的推论：如果讨论中出现的是超出上述范围的用法（例如把无限期观察也叫“有限窗口”，或把复盘当成新的启动门槛），那才需要另行质疑；但仅就“手册是否写过这两个提法”而言，不能成立。另需说明，演示手册第一章的“行动边界”与“它需要挤掉什么？挤掉之后我是否仍然愿意？”由行动者本人确认等内容，与上述时间窗口机制并不冲突：前者管代价可见与取舍确认，后者管低代价探索的收口。",
+        "basis": "来源支持",
+        "references": [
+          {
+            "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+            "source_version": 3,
+            "chapter_id": "b6db6950-b943-4db8-afa8-49b21f9ae29f",
+            "chapter_version": 2,
+            "start": 0,
+            "end": 462,
+            "quote": "# 原创演示资料（非真实出版物）\n\n**作者：** 产品演示内容。  \n**类型：** 判断框架。  \n**使用范围：** 本产品演示与功能测试。\n\n#### 第一章：先说明不愿付出的代价\n\n在选择行动前，先写下要保护的事项：已经承诺的工作、必要的休息、他人的合理预期，以及自己不愿承担的不可逆损失。本手册将这些事项称为“行动边界”。边界不是要求人永远保守，而是让选择的代价可见。\n\n一个想法即使令人兴奋，也不因此自动获得优先级。选择前可以问：它需要挤掉什么？挤掉之后我是否仍然愿意？这个回答应由行动者自己确认，不能由别人替代。\n\n#### 第二章：边界不是逃避的理由\n\n边界检查也可能被滥用：如果每次都要求完全确定才开始，实际效果可能只是延迟行动。因此，对可逆、投入较小、不会破坏已有承诺的尝试，应允许探索，而不是无限增加检查条件。\n\n本手册建议先区分可逆与难以撤回的行动，再决定检查强度。对于低代价尝试，可以设置一个有限时间窗口，并在窗口结束后复盘。对于代价不明或涉及他人承诺的事情，先补充信息和沟通，再决定是否开始。\n",
+            "label": "边界与取舍：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 462
+            }
+          },
+          {
+            "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+            "source_version": 2,
+            "chapter_id": "b6db6950-b943-4db8-afa8-49b21f9ae29f",
+            "chapter_version": 1,
+            "start": 369,
+            "end": 461,
+            "quote": "本手册建议先区分可逆与难以撤回的行动，再决定检查强度。对于低代价尝试，可以设置一个有限时间窗口，并在窗口结束后复盘。对于代价不明或涉及他人承诺的事情，先补充信息和沟通，再决定是否开始。",
+            "label": "边界与取舍：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 462
+            }
+          },
+          {
+            "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+            "source_version": 2,
+            "chapter_id": "b6db6950-b943-4db8-afa8-49b21f9ae29f",
+            "chapter_version": 1,
+            "start": 297,
+            "end": 367,
+            "quote": "如果每次都要求完全确定才开始，实际效果可能只是延迟行动。因此，对可逆、投入较小、不会破坏已有承诺的尝试，应允许探索，而不是无限增加检查条件。",
+            "label": "边界与取舍：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 462
+            }
+          },
+          {
+            "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+            "source_version": 2,
+            "chapter_id": "b6db6950-b943-4db8-afa8-49b21f9ae29f",
+            "chapter_version": 1,
+            "start": 150,
+            "end": 190,
+            "quote": "本手册将这些事项称为“行动边界”。边界不是要求人永远保守，而是让选择的代价可见。",
+            "label": "边界与取舍：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 462
+            }
+          },
+          {
+            "source_id": "3caf7334-cff4-458d-816f-24d305be3105",
+            "source_version": 2,
+            "chapter_id": "b6db6950-b943-4db8-afa8-49b21f9ae29f",
+            "chapter_version": 1,
+            "start": 192,
+            "end": 264,
+            "quote": "一个想法即使令人兴奋，也不因此自动获得优先级。选择前可以问：它需要挤掉什么？挤掉之后我是否仍然愿意？这个回答应由行动者自己确认，不能由别人替代。",
+            "label": "边界与取舍：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 462
+            }
+          }
+        ],
+        "response_to": [
+          "f9df1f5f-c667-473f-a2ef-01a76eee2457"
+        ],
+        "source_ids": [
+          "3caf7334-cff4-458d-816f-24d305be3105"
+        ],
+        "job_id": "ef265117-7236-4456-b966-055465428c86",
+        "step_key": "chat:0:c6031cff-795a-448b-8307-98ad154ea3f4",
+        "round": 1,
+        "context_notice": null,
+        "retrieval_mode": "hybrid"
+      }
+    ],
+    "manual_conversation": "d8035579-6434-44f9-a462-7f7073089a7b",
+    "manual_one_only": true,
+    "dynamic_conversation": "34586fa6-b02f-44cf-8eb0-94a3ee07ea3b",
+    "dynamic": {
+      "replies": 3,
+      "upper_bound": 3
+    },
+    "memory_conversation": "07f7ec14-0afa-4dd8-bab2-a6c488f1e62b",
+    "memory": {
+      "candidates": 1,
+      "confirmation_and_share_tested": true,
+      "test_memories_disabled": true
+    },
+    "pause_challenge": {
+      "status": "completed",
+      "paused": true,
+      "resumed": true,
+      "reply_count": 4,
+      "job_id": "5597e447-92c0-4c5e-a0e4-a19b31d86236",
+      "error": null
+    }
+  },
+  "review": {
+    "negative_question": "passed: no invented university or year",
+    "provenance_challenge": "passed: independently quoted the actual time-window and reflection passage",
+    "initial_discussion_quality": "Initial discussion contained peer-induced misattribution. Historical messages retained; system rule fixed and targeted live regression passed. Model factual reliability still requires source review.",
+    "synthetic_memory": "Test-only candidates were disabled after verifying explicit confirmation and sharing."
+  }
+}

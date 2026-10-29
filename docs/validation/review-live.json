@@ -1,0 +1,144 @@
+{
+  "authorization": "User explicitly authorized original demo snippets to Alibaba generation model on 2026-10-29",
+  "second_chat_profile_test": {
+    "status_code": 200,
+    "response": {
+      "ok": true,
+      "profile_id": "dashscope-default",
+      "profile_version": 1,
+      "model": "qwen-plus",
+      "operation": "generate",
+      "usage": {
+        "total_tokens": 25,
+        "completion_tokens": 1,
+        "prompt_tokens": 24,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "message": "连接测试成功；这不代表实际资料的分析质量已经通过验证"
+    }
+  },
+  "chat": {
+    "status": "completed",
+    "error": null,
+    "job_id": "a96ffc0c-8dec-437a-b877-a44257d98c3c",
+    "agent_id": "6271812c-9196-4646-a6de-b477fd7d4e8d",
+    "conversation_id": "30cf0a50-c13d-4771-bcf8-02891c7e6dc4",
+    "steps": {
+      "chat:0:6271812c-9196-4646-a6de-b477fd7d4e8d:query": {
+        "model": "text-embedding-v4",
+        "profile_id": "dashscope-embedding",
+        "profile_version": 1,
+        "usage": {
+          "prompt_tokens": 16,
+          "provider_calls": 1,
+          "total_tokens": 16
+        }
+      },
+      "chat:0:6271812c-9196-4646-a6de-b477fd7d4e8d:reply": {
+        "model": "qwen-plus",
+        "profile_id": "dashscope-default",
+        "profile_version": 1,
+        "usage": {
+          "completion_tokens": 208,
+          "prompt_tokens": 4182,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 4390
+        }
+      },
+      "memory_candidates": {
+        "model": "deepseek-flash",
+        "profile_id": "deepseek-default",
+        "profile_version": 3,
+        "usage": {
+          "completion_tokens": 6,
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 404,
+          "prompt_tokens": 404,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 410
+        }
+      }
+    },
+    "answers": [
+      {
+        "role": "assistant",
+        "speaker_name": "百炼独立模型验收",
+        "agent_id": "6271812c-9196-4646-a6de-b477fd7d4e8d",
+        "agent_version": 2,
+        "text": "小步验证适用于可逆、低成本的探索，当行动可能带来重要承诺或难以撤回的成本时不宜使用。若用户根本不知道需要验证什么，应先澄清目标和边界，而非直接尝试。这些条件来源于《小步验证：演示手册》中的说明，明确指出其适用范围与限制。",
+        "basis": "来源支持",
+        "references": [
+          {
+            "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+            "source_version": 2,
+            "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+            "chapter_version": 1,
+            "start": 393,
+            "end": 450,
+            "quote": "当行动可能给他人带来重要承诺、产生难以撤回的成本，或者用户根本不知道自己需要验证什么时，不宜直接套用“先做一下”。",
+            "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 486
+            }
+          },
+          {
+            "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+            "source_version": 2,
+            "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+            "chapter_version": 1,
+            "start": 460,
+            "end": 485,
+            "quote": "小步验证用于降低探索成本，不用于替代所有谨慎判断。",
+            "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 486
+            }
+          },
+          {
+            "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+            "source_version": 3,
+            "chapter_id": "97ef99a8-1ced-4c29-b3ce-01a63bed5c04",
+            "chapter_version": 2,
+            "start": 0,
+            "end": 486,
+            "quote": "# 原创演示资料（非真实出版物）\n\n**作者：** 产品演示内容。  \n**类型：** 方法说明。  \n**使用范围：** 本产品演示与功能测试。\n\n#### 第一章：先缩小未知\n\n面对一个尚不确定是否值得长期投入的想法，可以先写下一项需要验证的判断，而不是立刻制订宏大的计划。例如，把“我要做一个新项目”改写为“我是否愿意连续两次完成这个项目最基础的一小步”。这并不证明项目一定成功，只是在减少一个具体的未知。\n\n本手册把一次小步验证定义为：事先写明问题，选择一个可逆的小动作，限定投入，记录真实结果，再决定下一步。演示中可把首次尝试限制为十五分钟；十五分钟只是示例限制，不是普遍有效的科学阈值。\n\n#### 第二章：结果必须能改变下一步\n\n一次尝试结束后，应记录实际做了什么、出现了什么结果、最初判断是否需要调整。只有“感觉很受鼓舞”而没有观察记录，不能算完成本手册定义的验证。\n\n当行动可能给他人带来重要承诺、产生难以撤回的成本，或者用户根本不知道自己需要验证什么时，不宜直接套用“先做一下”。应先澄清目标和边界。小步验证用于降低探索成本，不用于替代所有谨慎判断。\n",
+            "label": "小步验证：演示手册 · 原创演示资料（非真实出版物）",
+            "locator": {
+              "type": "text_offsets",
+              "start": 0,
+              "end": 486
+            }
+          }
+        ],
+        "response_to": [
+          "f278cb67-305b-401c-a7fc-7ffbd4210bed"
+        ],
+        "source_ids": [
+          "adf097a5-0e69-4271-90ee-1d7b30748665"
+        ],
+        "job_id": "a96ffc0c-8dec-437a-b877-a44257d98c3c",
+        "step_key": "chat:0:6271812c-9196-4646-a6de-b477fd7d4e8d",
+        "round": 1,
+        "context_notice": null,
+        "retrieval_mode": "hybrid"
+      }
+    ]
+  },
+  "verification": {
+    "actual_reply_model": "qwen-plus",
+    "reply_completed": true,
+    "citation_count": 3,
+    "all_citations_match_immutable_source": true,
+    "retrieval_mode": "hybrid"
+  }
+}

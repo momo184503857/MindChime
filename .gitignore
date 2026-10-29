@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.env.local
+.venv/
+.cache/
+.runtime/
+data/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.tsbuildinfo
+test-results/
+playwright-report/
+coverage/
