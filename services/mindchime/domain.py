@@ -80,7 +80,7 @@ def dedupe_references(refs):
 
 def agent_data(data, previous=None):
     changes = dict(data)
-    binding_keys = {"source_ids", "chapter_ids", "card_ids", "excluded_card_ids", "source_versions", "chapter_versions", "card_versions"}
+    binding_keys = {"source_ids", "chapter_ids", "card_ids", "excluded_card_ids", "source_versions", "chapter_versions", "card_versions", "distillation_ids", "raw_source_ids"}
     if previous and not (binding_keys & data.keys()):
         return {**previous, **data}
     data = {**(previous or {}), **data}
@@ -90,7 +90,34 @@ def agent_data(data, previous=None):
     if not selected_sources and card_ids:
         selected_sources = sorted({sid for cid in card_ids for sid in require(cid, "card")["data"].get("source_ids", [])})
     validate_sources(selected_sources)
-    requested_sources = changes.get("source_versions", {})
+    requested_sources = dict(changes.get("source_versions", {}))
+    selected_results = {}
+    result_map = dict(data.get("distillation_ids", {}))
+    raw_sources = set(data.get("raw_source_ids", []))
+    if raw_sources - set(selected_sources) or set(result_map) - set(selected_sources):
+        raise ValueError("蒸馏结果或原文选择不属于绑定资料。")
+    for sid in selected_sources:
+        live = require(sid, "source")
+        if sid in raw_sources:
+            if result_map.get(sid):
+                raise ValueError("同一资料不能同时选结果和仅原文。")
+            continue
+        rid = result_map.get(sid) or live["data"].get("active_distillation_id")
+        # Existing explicit card/chapter bindings remain compatible.
+        if not rid:
+            if not card_ids and not chapter_ids and db.list("distillation", parent_id=sid):
+                raise ValueError("请先选择完整蒸馏结果，或明确选择仅原文。")
+            continue
+        result = require(rid, "distillation")
+        rd = result["data"]
+        if rd.get("source_id") != sid or result["status"] != "completed":
+            raise ValueError("所选蒸馏结果不属于该资料或尚未完整完成。")
+        if result_map.get(sid) and sid in requested_sources and requested_sources[sid] != rd.get("source_version"):
+            raise ValueError("蒸馏结果与所选资料版本不一致。")
+        if rd.get("source_version"):
+            requested_sources[sid] = rd["source_version"]
+        selected_results[sid] = result
+        result_map[sid] = rid
     chosen_sources = {}
     for sid in selected_sources:
         live = require(sid, "source")
@@ -106,6 +133,10 @@ def agent_data(data, previous=None):
         sid = live["data"]["source_id"]
         chosen_source = chosen_sources[sid]
         explicit = changes.get("chapter_versions", {}).get(cid)
+        result_version = selected_results.get(sid, {}).get("data", {}).get("chapter_versions", {}).get(cid)
+        if explicit and result_version and int(explicit) != result_version:
+            raise ValueError("章节版本与选定蒸馏结果不一致。")
+        explicit = explicit or result_version
         wanted = explicit or chosen_source["data"].get("chapter_versions", {}).get(cid)
         if wanted:
             result = db.revision(cid, int(wanted))
@@ -120,30 +151,60 @@ def agent_data(data, previous=None):
     def choose_card(cid):
         live = require(cid, "card")
         explicit = changes.get("card_versions", {}).get(cid)
+        result_version = next((r["data"].get("card_versions", {}).get(cid) for r in selected_results.values() if cid in r["data"].get("card_ids", [])), None)
+        if explicit and result_version and int(explicit) != result_version:
+            raise ValueError("知识卡版本与选定蒸馏结果不一致。")
+        explicit = explicit or next((r["data"].get("card_versions", {}).get(cid) for r in selected_results.values() if cid in r["data"].get("card_ids", [])), None)
         if explicit:
             result = db.revision(cid, int(explicit))
+        elif live["data"].get("edit_origin") in {"user", "user_original", "user_modified"} and selected_results:
+            result = live
         else:
             cutoffs = [chosen_sources[sid]["updated_at"] for sid in source_ids(live["data"]) if sid in requested_sources]
             result = next((v for v in db.revisions(cid) if v["updated_at"] <= min(cutoffs)), None) if cutoffs else live
         if not result:
             raise ValueError("所选知识卡版本不存在或晚于指定资料版本。")
         return result
-    # A source-level selection snapshots its presently selected chapters and cards.
+    # A source selection reads one explicitly fixed result, never all historical cards.
     if selected_sources and not chapter_ids and not card_ids:
-        chapter_ids = [cid for sid in selected_sources for cid in chosen_sources[sid]["data"]["chapter_ids"]
+        chapter_ids = [cid for sid in selected_sources
+                       for cid in selected_results[sid]["data"]["chapter_ids"] if selected_results.get(sid)] if all(sid in selected_results for sid in selected_sources) else [
+                       cid for sid in selected_sources for cid in (selected_results.get(sid, {}).get("data", {}).get("chapter_ids") or chosen_sources[sid]["data"]["chapter_ids"])
                        if (c := choose_chapter(cid))["data"].get("selected", True) and c["data"].get("text", "").strip()]
-        card_ids = [c["id"] for c in db.list("card") if source_ids(c["data"]) & set(selected_sources)
-                    and source_ids(c["data"]) <= set(selected_sources)
-                    and all(sid not in requested_sources or c["data"].get("distill_job_id") == chosen_sources[sid]["data"].get("latest_distill_job_id")
-                            or c["created_at"] <= chosen_sources[sid]["updated_at"] for sid in source_ids(c["data"]))]
+        card_ids = [c["id"] for c in db.list("card") if c["status"] != "disabled"
+                    and source_ids(c["data"]) & set(selected_sources) and source_ids(c["data"]) <= set(selected_sources)
+                    and not (source_ids(c["data"]) & raw_sources)
+                    and all((c["id"] in selected_results[sid]["data"].get("card_ids", [])
+                             or (not c["data"].get("distillation_id") and c["data"].get("edit_origin") in {"user", "user_original", "user_modified"}))
+                            if sid in selected_results else not c["data"].get("distillation_id")
+                            for sid in source_ids(c["data"]))]
     for cid in chapter_ids:
         chapter = require(cid, "chapter")
+        result = selected_results.get(chapter["data"]["source_id"])
+        if result and cid not in result["data"].get("chapter_ids", []):
+            raise ValueError("章节不属于选定蒸馏结果的处理范围。")
         if chapter["data"]["source_id"] not in selected_sources:
             raise ValueError("所选章节不属于已绑定资料。")
         if cid not in chosen_sources[chapter["data"]["source_id"]]["data"]["chapter_ids"]:
             raise ValueError("所选章节不属于已选择的资料版本。")
     for cid in card_ids:
+        live_card = require(cid, "card")
+        if live_card["data"].get("distillation_id"):
+            result = require(live_card["data"]["distillation_id"], "distillation")
+            if result["status"] != "completed":
+                raise ValueError("知识卡所属蒸馏尚未完整完成。")
+        if live_card["data"].get("distillation_id") and any(sid in selected_results and live_card["data"]["distillation_id"] != selected_results[sid]["id"] for sid in source_ids(live_card["data"])):
+            raise ValueError("知识卡不属于选定蒸馏结果。")
+        if live_card["data"].get("edit_origin") not in {"user", "user_original", "user_modified"} and any(sid in selected_results and cid not in selected_results[sid]["data"].get("card_ids", []) for sid in source_ids(live_card["data"])):
+            raise ValueError("知识卡不属于选定蒸馏结果。")
         card = choose_card(cid)
+        if require(cid, "card")["status"] == "disabled":
+            raise ValueError("候选或失效知识卡不可绑定。")
+        for sid in source_ids(card["data"]):
+            if sid in raw_sources:
+                raise ValueError("仅原文模式不能绑定知识卡。")
+            if sid in selected_results and card["data"].get("distillation_id") and card["data"]["distillation_id"] != selected_results[sid]["id"]:
+                raise ValueError("知识卡不属于选定蒸馏结果，不能混入其他结果。")
         if source_ids(card["data"]) - set(selected_sources):
             raise ValueError("知识卡包含未绑定的资料，请明确加入该资料。")
     excluded = data.get("excluded_card_ids", [])
@@ -152,6 +213,7 @@ def agent_data(data, previous=None):
     if not chapter_ids and not card_ids:
         raise ValueError("Agent 至少需要一项可用知识卡或有文字的章节。")
     return {**data, "source_ids": selected_sources, "chapter_ids": chapter_ids, "card_ids": card_ids,
+            "distillation_ids": result_map, "raw_source_ids": sorted(raw_sources),
             "excluded_evidence": excluded_evidence,
             "source_versions": {sid: chosen_sources[sid]["version"] for sid in selected_sources},
             "chapter_versions": {cid: choose_chapter(cid)["version"] for cid in chapter_ids},
@@ -172,7 +234,7 @@ def knowledge_summary(agent):
             "unreviewed": len([x for x in cards if x and x["data"].get("review_status") != "verified"]),
             "updates_available": [{"source_id": sid, "title": s["title"], "bound_version": data.get("source_versions", {}).get(sid), "current_version": s["version"]}
                                   for sid in data.get("source_ids", []) if (s := db.get(sid, "source")) and s["version"] != data.get("source_versions", {}).get(sid)],
-            "coverage": [{"source_id": sid, "title": s["title"], "coverage": s["data"].get("coverage", {})}
+            "coverage": [{"source_id": sid, "title": s["title"], "coverage": ((db.get(data.get("distillation_ids", {}).get(sid, ""), "distillation") or {}).get("data", {}).get("coverage") or (db.revision(sid, data.get("source_versions", {}).get(sid, s["version"])) or s)["data"].get("coverage", {}))}
                          for sid in data.get("source_ids", []) if (s := db.get(sid, "source"))]}
 
 
@@ -315,7 +377,7 @@ async def rebuild_index(ctx, job):
             for start in range(0, len(text), 1000):
                 candidates.append({"id": f"chapter:{chapter['id']}:v{chapter['version']}:{start}:{min(start+1200,len(text))}", "text": text[start:start+1200], "source_ids": [sid]})
     for card in db.list("card"):
-        if set(card["data"].get("source_ids", [])) & set(selected):
+        if card["status"] != "disabled" and set(card["data"].get("source_ids", [])) & set(selected):
             candidates.append({"id": f"card:{card['id']}:v{card['version']}", "text": f"{card['title']}：{card['data'].get('content','')}", "source_ids": card["data"].get("source_ids", [])})
     for offset in range(0, len(candidates), 40):
         ctx.check_control()
@@ -345,7 +407,7 @@ REPLY_SCHEMA = json_schema({"text": STR, "citation_ids": STRINGS, "response_to":
                            "basis": {"type": "string", "enum": ["来源支持", "基于来源推论", "一般知识补充", "用户提供", "暂无依据"]}})
 
 
-async def distill(ctx, job):
+async def legacy_distill(ctx, job):
     payload = job["data"]["input"]
     live_source = require(payload["source_id"], "source")
     source = db.revision(live_source["id"], payload.get("source_version", live_source["version"])) or live_source
@@ -408,6 +470,16 @@ async def distill(ctx, job):
     return {"source_id": source["id"], "coverage": coverage, "integration": integration, "partial": bool(failures)}
 
 
+async def distill(ctx, job):
+    if job["data"]["input"].get("result_schema_version"):
+        from .distillation.engine import run
+        return await run(ctx, job)
+    result = await legacy_distill(ctx, job)
+    from .distillation.store import migrate_legacy
+    migrate_legacy()
+    return result
+
+
 AGENT_SCHEMA = json_schema({"name": STR, "description": STR, "purpose": STR, "perspective": STR,
                            "framework": STR, "methods": STR, "boundaries": STR, "differences": STR})
 
@@ -420,6 +492,15 @@ async def generate_agents(ctx, job):
     if not material:
         material = [{"title": chapter["title"], "text": chapter["data"].get("text", "")} for x in binding["chapter_ids"]
                     if (chapter := db.revision(x, binding["chapter_versions"][x]) or require(x, "chapter"))]
+    for rid in binding.get("distillation_ids", {}).values():
+        result = require(rid, "distillation")
+        if result["status"] != "completed":
+            raise StepFailure("所选蒸馏结果不可用。")
+        from .distillation.store import usable_sections
+        sections = usable_sections(result, binding["card_ids"])
+        if sections:
+            material.append({"method": result["data"].get("method_id"), "distillation_id": rid,
+                             "method_sections": sections, "notice": "模型归纳的思想框架和实践方法，仍须依据知识卡核对"})
     if len(json.dumps(material, ensure_ascii=False)) > 60000:
         raise StepFailure("所选知识超出单次 Agent 草稿生成范围，请先蒸馏并选择知识卡，或减少章节；不会截断资料。")
     count = payload.get("count", 1)
@@ -649,6 +730,9 @@ async def ocr(ctx, job):
             raise
         except Exception as exc:
             failures.append({"chapter_id": cid, "reason": str(exc)})
+    from .distillation.store import invalidate_current
+    for cid in done:
+        invalidate_current(source["id"], cid)
     db.update(source["id"], data={"ocr_report": {"completed": done, "failures": failures},
         "chapter_versions": {c["id"]: c["version"] for c in chapters_for(source["id"])}}, status="parsed" if done else "needs_ocr")
     if not done:

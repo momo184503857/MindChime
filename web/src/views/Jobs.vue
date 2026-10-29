@@ -106,7 +106,8 @@ function openRelated(j: Entity) {
           <tr v-for="j in filtered" :key="j.id" :class="{ selected: j.id === selected }">
             <td>
               <button class="task-name" @click="selected = j.id">
-                {{ types[j.data.kind] || j.title }}
+                {{ types[j.data.kind] || j.title
+                }}{{ j.data.method_name ? ' · ' + j.data.method_name : '' }}
               </button>
               <small class="task-id">{{ j.id.slice(0, 8) }}</small>
             </td>

@@ -1,0 +1,822 @@
+{
+  "run_id": "cef8c2f7-6137-4038-9997-e92186e09227",
+  "results": {
+    "book-to-skill": {
+      "job_id": "a55da510-2d55-4a38-acf8-4802b1f1ef7b",
+      "status": "completed",
+      "error": null,
+      "calls": [
+        {
+          "step": "method:book-to-skill:prepare:structure:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 290,
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 773,
+            "prompt_tokens": 773,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "total_tokens": 1063
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:frameworks",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1116,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 905,
+            "prompt_tokens": 1033,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2149
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:patterns:0:0",
+          "status": "failed",
+          "usage": null,
+          "profile": "deepseek-default",
+          "profile_version": null,
+          "model": null
+        },
+        {
+          "step": "method:book-to-skill:index:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2198,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 4975,
+            "prompt_tokens": 5103,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 7301
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:cheatsheet:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1814,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 7184,
+            "prompt_tokens": 7312,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 9126
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:integration:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1070,
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1220,
+            "prompt_tokens": 1220,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "total_tokens": 2290
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:patterns:0:0:9d68af10eec9c899",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1695,
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 4857,
+            "prompt_tokens": 5113,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "total_tokens": 6808
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:index:0:0:f5ebffc54a002f76",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2432,
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 6670,
+            "prompt_tokens": 6926,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "total_tokens": 9358
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:cheatsheet:0:0:15225a3b01780ab1",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1849,
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 9201,
+            "prompt_tokens": 9457,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "total_tokens": 11306
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-to-skill:integration:0:0:22d8df33e7730e76",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 959,
+            "prompt_cache_hit_tokens": 1024,
+            "prompt_cache_miss_tokens": 196,
+            "prompt_tokens": 1220,
+            "prompt_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "total_tokens": 2179
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        }
+      ],
+      "distillation_id": "f5163ae5-0f0e-578c-94ee-ab8701c4d9da",
+      "cards": 7,
+      "verified_references": 7,
+      "extensions": [
+        "structure",
+        "patterns",
+        "index",
+        "cheatsheet"
+      ],
+      "quality": {
+        "located_cards": 7,
+        "candidate_cards": 0,
+        "invalid_relations": 0,
+        "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+      },
+      "citations_exact": true,
+      "active_result_unchanged": true
+    },
+    "cangjie": {
+      "job_id": "40f6e207-09fe-44f1-9750-00c0d3cb307a",
+      "status": "completed",
+      "error": null,
+      "calls": [
+        {
+          "step": "method:cangjie:prepare:understanding:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 581,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 659,
+            "prompt_tokens": 787,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 1368
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:frameworks",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1056,
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 1186,
+            "prompt_tokens": 1442,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "total_tokens": 2498
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:principles",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1180,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1202,
+            "prompt_tokens": 1330,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2510
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:cases",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1102,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1204,
+            "prompt_tokens": 1332,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2434
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:counterexamples",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1076,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1208,
+            "prompt_tokens": 1336,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2412
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:glossary",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1150,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1206,
+            "prompt_tokens": 1334,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2484
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:verification:0:0:e96f378bfacf15da",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2125,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 12966,
+            "prompt_tokens": 13094,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 15219
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:verification:1:0:e7f55a02379ce680",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1954,
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 7896,
+            "prompt_tokens": 8280,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "total_tokens": 10234
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:capabilities:0:0:b5eda5519c489b85",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2454,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 15305,
+            "prompt_tokens": 15433,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 17887
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:capabilities:1:0:7c8e88f5f56ffef9",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2373,
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 10034,
+            "prompt_tokens": 10418,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "total_tokens": 12791
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:pressure:0:0:fc4aa7af84a39047",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2656,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 17943,
+            "prompt_tokens": 18071,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 20727
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:pressure:1:0:cc09e8875db4f143",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2810,
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 12557,
+            "prompt_tokens": 12941,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "total_tokens": 15751
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:repair:0:0:a76d463cdd0e3a66",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 501,
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 20840,
+            "prompt_tokens": 20840,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "total_tokens": 21341
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:repair:1:0:789c3afbd088218c",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 630,
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 15698,
+            "prompt_tokens": 16082,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "total_tokens": 16712
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:cangjie:integration:0:0:accc30785fae944b",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1541,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 4702,
+            "prompt_tokens": 4830,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 6371
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        }
+      ],
+      "distillation_id": "d180bbb9-7307-500b-91f5-db1ec2004477",
+      "cards": 30,
+      "verified_references": 33,
+      "extensions": [
+        "understanding",
+        "verification",
+        "verification",
+        "capabilities",
+        "capabilities",
+        "pressure",
+        "pressure",
+        "repair",
+        "repair"
+      ],
+      "quality": {
+        "located_cards": 30,
+        "candidate_cards": 13,
+        "invalid_relations": 2,
+        "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+      },
+      "citations_exact": true,
+      "active_result_unchanged": true
+    },
+    "sansheng": {
+      "job_id": "86736e57-b27e-4a6a-a123-960f3597e2b2",
+      "status": "completed",
+      "error": null,
+      "calls": [
+        {
+          "step": "method:sansheng:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:reading",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1129,
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 203,
+            "prompt_tokens": 843,
+            "prompt_tokens_details": {
+              "cached_tokens": 640
+            },
+            "total_tokens": 1972
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:sansheng:map:0:0:975eb0473f313299",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2404,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 5798,
+            "prompt_tokens": 5926,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 8330
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:sansheng:causal:0:0:4254124fe1b6afa4",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1822,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 8331,
+            "prompt_tokens": 8459,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 10281
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:sansheng:selfcheck:0:0:6f30631db1af928f",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2694,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 10282,
+            "prompt_tokens": 10410,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 13104
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:sansheng:integration:0:0:ec244c5d5a6e3df6",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1153,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1018,
+            "prompt_tokens": 1146,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2299
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        }
+      ],
+      "distillation_id": "14a8f900-63ce-5ae1-99d1-3aa3f910fcbe",
+      "cards": 6,
+      "verified_references": 10,
+      "extensions": [
+        "map",
+        "causal",
+        "selfcheck"
+      ],
+      "quality": {
+        "located_cards": 6,
+        "candidate_cards": 0,
+        "invalid_relations": 0,
+        "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+      },
+      "citations_exact": true,
+      "active_result_unchanged": true
+    },
+    "bolan": {
+      "job_id": "6ab75ca7-0378-4be0-b87b-9f5bb09ec2ac",
+      "status": "completed",
+      "error": null,
+      "calls": [
+        {
+          "step": "method:bolan:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:argument",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1200,
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 200,
+            "prompt_tokens": 840,
+            "prompt_tokens_details": {
+              "cached_tokens": 640
+            },
+            "total_tokens": 2040
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:bolan:thinking:0:0:d0f2f8e5c0b02ae7",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1694,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 5096,
+            "prompt_tokens": 5224,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 6918
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:bolan:contract:0:0:545a7b6405d7f8e0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1764,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 6921,
+            "prompt_tokens": 7049,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 8813
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:bolan:inner-evidence:0:0:994ad7cb4ea33a5c",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1908,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 8794,
+            "prompt_tokens": 8922,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 10830
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:bolan:integration:0:0:35656b20ab3f37b6",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1225,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1153,
+            "prompt_tokens": 1281,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2506
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        }
+      ],
+      "distillation_id": "6cbd31bc-12fa-520d-8b00-1f54a2c21e73",
+      "cards": 7,
+      "verified_references": 8,
+      "extensions": [
+        "thinking",
+        "contract",
+        "inner-evidence"
+      ],
+      "quality": {
+        "located_cards": 7,
+        "candidate_cards": 0,
+        "invalid_relations": 0,
+        "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+      },
+      "citations_exact": true,
+      "active_result_unchanged": true
+    },
+    "book-reader": {
+      "job_id": "e20a10cf-beb2-435e-b8bf-059bc1b9182f",
+      "status": "completed",
+      "error": null,
+      "calls": [
+        {
+          "step": "method:book-reader:prepare:inspection:0:0",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 422,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 659,
+            "prompt_tokens": 787,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 1209
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-reader:97ef99a8-1ced-4c29-b3ce-01a63bed5c04:0:analysis",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1292,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1153,
+            "prompt_tokens": 1281,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2573
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-reader:structure:0:0:5341b7fc95a510c4",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1665,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 5952,
+            "prompt_tokens": 6080,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 7745
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-reader:critical:0:0:ffd56aaaf7042b57",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 915,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 7731,
+            "prompt_tokens": 7859,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 8774
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-reader:application:0:0:fc3c144e36a0efe6",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 2586,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 8727,
+            "prompt_tokens": 8855,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 11441
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        },
+        {
+          "step": "method:book-reader:integration:0:0:2659fae69a1bd1f3",
+          "status": "completed",
+          "usage": {
+            "completion_tokens": 1004,
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1104,
+            "prompt_tokens": 1232,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "total_tokens": 2236
+          },
+          "profile": "deepseek-default",
+          "profile_version": 3,
+          "model": "deepseek-flash"
+        }
+      ],
+      "distillation_id": "d5a8ffc8-f5e5-5279-bffe-46d40263f1a8",
+      "cards": 6,
+      "verified_references": 9,
+      "extensions": [
+        "inspection",
+        "structure",
+        "critical",
+        "application"
+      ],
+      "quality": {
+        "located_cards": 6,
+        "candidate_cards": 0,
+        "invalid_relations": 0,
+        "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+      },
+      "citations_exact": true,
+      "active_result_unchanged": true
+    }
+  },
+  "source_id": "adf097a5-0e69-4271-90ee-1d7b30748665",
+  "chapter_ids": [
+    "97ef99a8-1ced-4c29-b3ce-01a63bed5c04"
+  ],
+  "purpose": "用相同原创演示资料核对五种书内蒸馏方法，重点保留执行条件、反例和边界。",
+  "status": "passed"
+}

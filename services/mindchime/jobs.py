@@ -43,7 +43,7 @@ def emit_job(job: dict) -> None:
         db.emit(f"conversation:{cid}", "job", event)
 
 
-def enqueue(kind: str, payload: dict, request_id: str | None = None) -> dict:
+def enqueue(kind: str, payload: dict, request_id: str | None = None, *, profile_snapshots: dict | None = None) -> dict:
     fingerprint = hashlib.sha256(json.dumps([kind, payload], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     if request_id:
         for old in db.list("job"):
@@ -58,7 +58,8 @@ def enqueue(kind: str, payload: dict, request_id: str | None = None) -> dict:
                 raise ValueError("此会话已有未结束任务，请先继续或结束它。")
     job = db.create("job", kind, {"kind": kind, "input": payload, "request_id": request_id,
                     "model_routes": settings(),
-                    "fingerprint": fingerprint, "steps": {}, "attempt": 0, "stage": "等待处理"}, status="queued")
+                    "fingerprint": fingerprint, "steps": {}, "attempt": 0, "stage": "等待处理",
+                    **({"profile_snapshots": profile_snapshots} if profile_snapshots is not None else {})}, status="queued")
     emit_job(job)
     return job
 

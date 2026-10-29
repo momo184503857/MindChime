@@ -19,6 +19,7 @@ import { get, post, patch, remove, download } from '../lib/api';
 import { useResource, useAction, useConfirm } from '../lib/useData';
 import {
   type Entity,
+  type DistillationMethod,
   type Profile,
   type Reference,
   typeLabels,
@@ -34,6 +35,8 @@ import MarkdownText from '../components/MarkdownText.vue';
 import EvidenceDrawer from '../components/EvidenceDrawer.vue';
 import CardEditor from '../components/CardEditor.vue';
 import SourceOverview from '../components/SourceOverview.vue';
+import DistillationMethodPicker from '../components/DistillationMethodPicker.vue';
+import DistillationResults from '../components/DistillationResults.vue';
 const attributions: Record<string, string> = {
   author: '作者观点',
   reported: '资料转述',
@@ -90,6 +93,8 @@ const editing = ref(false),
   card = ref<Entity | null>(null),
   evidence = ref<Reference | null>(null),
   evidenceOpen = ref(false);
+const methods = ref<DistillationMethod[]>([]),
+  methodId = ref('cangjie');
 const profiles = ref<Profile[]>([]),
   model = ref<string | null>(null),
   focus = ref(''),
@@ -113,7 +118,12 @@ function showEvidence(ref: Reference) {
 }
 async function configure() {
   await run(async () => {
-    profiles.value = await get('/profiles');
+    const [p, catalog] = await Promise.all([
+      get<Profile[]>('/profiles'),
+      get<{ methods: DistillationMethod[] }>('/distillation-methods'),
+    ]);
+    profiles.value = p;
+    methods.value = catalog.methods;
     distillOpen.value = true;
   });
 }
@@ -126,12 +136,21 @@ async function distill() {
     const job = await post('/sources/' + id.value + '/distill', {
       chapter_ids: selected.value,
       model_profile_id: model.value || undefined,
-      focus: focus.value,
+      prompt: focus.value,
+      method_id: methodId.value,
       request_id: requestId(),
     });
     distillOpen.value = false;
     await router.push('/jobs?selected=' + job.id);
   }, '已提交蒸馏任务');
+}
+async function rerun(result: Entity) {
+  methodId.value = result.data.method_id;
+  focus.value = result.data.prompt || '';
+  selected.value = (result.data.chapter_ids || []).filter((id: string) =>
+    data.value.chapters.some((c: Entity) => c.id === id),
+  );
+  await configure();
 }
 async function ocr() {
   await confirm(
@@ -473,6 +492,9 @@ async function restore() {
             </div>
           </ResourceState>
         </n-tab-pane>
+        <n-tab-pane name="distillations" tab="蒸馏结果">
+          <DistillationResults :source="source" @changed="reload()" @rerun="rerun" />
+        </n-tab-pane>
         <n-tab-pane name="overview" tab="总览与覆盖">
           <SourceOverview :source="source" :chapters="data.chapters" :versions="data.versions" />
         </n-tab-pane>
@@ -500,7 +522,12 @@ async function restore() {
       </n-tabs>
     </template>
   </ResourceState>
-  <n-modal v-model:show="distillOpen" preset="card" title="确认本次蒸馏" style="width: 620px">
+  <n-modal
+    v-model:show="distillOpen"
+    preset="card"
+    title="确认本次蒸馏"
+    style="width: 900px; max-width: calc(100vw - 48px)"
+  >
     <p>
       已选择
       <strong>{{ selected.length }}</strong>
@@ -511,6 +538,7 @@ async function restore() {
     <n-alert v-if="selectedChars > 500000" type="error" style="margin-top: 16px">
       超过默认 50 万字符限制，请缩小章节范围。
     </n-alert>
+    <DistillationMethodPicker v-model="methodId" :methods="methods" />
     <n-form style="margin-top: 20px">
       <n-form-item label="模型">
         <n-select
@@ -530,11 +558,12 @@ async function restore() {
           type="textarea"
           :autosize="{ minRows: 3, maxRows: 6 }"
           placeholder="你希望从这份资料中重点理解什么？"
+          :maxlength="5000"
         />
       </n-form-item>
     </n-form>
     <n-alert type="info" :show-icon="false">
-      所选原文将发送到指定模型服务，生成知识卡、章节摘要、关系与覆盖报告。模型费用由服务商收取；关掉网页后，已确认任务会继续。
+      所选原文将发送到指定模型服务，仅依据本书生成公共结果和方法特色成果。每次结果独立保存，需手动设为当前结果。模型费用由服务商收取；关掉网页后，已确认任务会继续。
     </n-alert>
     <div class="modal-footer">
       <n-button @click="distillOpen = false">返回调整</n-button>

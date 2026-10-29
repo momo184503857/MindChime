@@ -25,6 +25,7 @@ from .common import context_text, markdown_record, require
 router = APIRouter()
 PORTABLE = {
     "source",
+    "distillation",
     "chapter",
     "card",
     "agent",
@@ -72,9 +73,12 @@ REFERENCE_FIELDS = {
     "from_id",
     "to_id",
     "parent_id",
+    "distillation_id",
+    "active_distillation_id",
 }
 REFERENCE_LISTS = {
     "source_ids",
+    "raw_source_ids",
     "chapter_ids",
     "card_ids",
     "agent_ids",
@@ -88,6 +92,7 @@ REFERENCE_LISTS = {
 }
 REFERENCE_MAPS = {
     "source_versions",
+    "distillation_ids",
     "chapter_versions",
     "card_versions",
     "agent_snapshots",
@@ -115,6 +120,11 @@ def dependency_ids(value, field=None) -> set[str]:
             and isinstance(value.get("id"), str)
         ):
             found.add(value["id"])
+        if field == "distillation_ids":
+            found |= {v for v in value.values() if isinstance(v, str)}
+        if field == "integration":
+            found |= {relation[key] for relation in value.get("relationships", []) if isinstance(relation, dict)
+                      for key in ("from", "to") if isinstance(relation.get(key), str)}
         for key, item in value.items():
             found |= dependency_ids(item, key)
         return found
@@ -137,7 +147,7 @@ def select_records(kind: str, id: str | None):
         selected |= {
             r["id"]
             for r in all_records.values()
-            if r["kind"] in {"chapter", "card"}
+            if r["kind"] in {"chapter", "card", "distillation"}
             and (r.get("parent_id") == id or id in r["data"].get("source_ids", []))
         }
     if kind == "conversation":
@@ -209,6 +219,8 @@ def validate_manifest(manifest: dict):
                     raise HTTPException(422, "资产依赖编号格式无效")
                 if key in REFERENCE_MAPS and not isinstance(child, dict):
                     raise HTTPException(422, "版本依赖映射格式无效")
+                if key == "distillation_ids" and any(not isinstance(value, str) for value in child.values()):
+                    raise HTTPException(422, "蒸馏结果选择映射必须使用字符串编号")
                 validate_links(child)
 
     for record in records:
@@ -327,7 +339,7 @@ def managed_original(path):
 
 @router.get("/export")
 def export(kind: str = "workspace", id: str | None = None, format: str = "zip", originals: bool = False):
-    if kind not in {"workspace", "source", "agent", "conversation", "artifact", "skill"}:
+    if kind not in {"workspace", "source", "agent", "conversation", "artifact", "skill", "distillation"}:
         raise HTTPException(422, "不支持的导出类型")
     if format not in {"zip", "markdown"}:
         raise HTTPException(422, "请选择 Markdown 或 ZIP")
@@ -353,6 +365,16 @@ def export(kind: str = "workspace", id: str | None = None, format: str = "zip", 
             for chapter in records:
                 if chapter["kind"] == "chapter" and chapter["id"] in data.get("chapter_ids", []):
                     sections += [f"### {chapter['title']}", "", chapter["data"].get("latest_summary") or "未处理或未生成摘要", ""]
+        if kind == "distillation" and item:
+            from ..distillation.store import result_detail
+            result = result_detail(item["id"])
+            data = result["data"]
+            sections += ["## 方法与版本", context_text(data.get("method", {})),
+                "## 提示词", data.get("prompt", ""), "## 总览", context_text(data.get("integration", {})),
+                "## 章节摘要", context_text(data.get("chapter_summaries", [])),
+                "## 覆盖与质量", context_text(data.get("coverage", {})), context_text(data.get("quality", {})),
+                "## 方法特色成果", context_text(data.get("extensions", [])), "## 提醒", context_text(data.get("warnings", []))]
+            selected = result["cards"]
         if kind == "agent":
             selected = [item] + [r for r in records if r["kind"] == "card"]
         for record in selected:
@@ -460,6 +482,14 @@ def remap(value, mapping, field=None):
             (mapping.get(key, key) if field in REFERENCE_MAPS else key): remap(item, mapping, key)
             for key, item in value.items()
         }
+        if field == "distillation_ids":
+            result = {mapping.get(k, k): mapping.get(v, v) for k, v in value.items()}
+        if field == "integration":
+            for relation in result.get("relationships", []):
+                if isinstance(relation, dict):
+                    for key in ("from", "to"):
+                        if isinstance(relation.get(key), str):
+                            relation[key] = mapping.get(relation[key], relation[key])
         if (
             isinstance(value.get("kind"), str)
             and value["kind"] in PORTABLE
@@ -552,7 +582,7 @@ def restore(id: str, body: dict):
             if missing:
                 item["data"]["missing_dependency_ids"] = sorted(missing)
                 item["data"]["disabled_reason"] = "资产包缺少依赖，未连接到本实例的同名或同编号资料"
-                if item["kind"] in {"agent", "skill", "run", "relation", "memory", "card"}:
+                if item["kind"] in {"agent", "skill", "run", "relation", "memory", "card", "distillation"}:
                     item["status"] = "disabled"
             db.create(
                 item["kind"],

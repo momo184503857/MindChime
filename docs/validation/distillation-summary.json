@@ -1,0 +1,118 @@
+{
+  "verified_at": "2026-10-29T16:19:48.345071+00:00",
+  "backend_passed": 141,
+  "browser": {
+    "expected": 33,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "engine_versions": {
+    "chromium": "156.0.8078.4",
+    "firefox": "157.0",
+    "webkit": "27.2"
+  },
+  "frontend_typecheck": "passed",
+  "frontend_build": "passed",
+  "real_model": {
+    "status": "passed",
+    "model": "deepseek-flash",
+    "source": "PRD 原创小步验证演示资料",
+    "external_sources": false,
+    "methods": {
+      "book-to-skill": {
+        "status": "completed",
+        "distillation_id": "f5163ae5-0f0e-578c-94ee-ab8701c4d9da",
+        "cards": 7,
+        "verified_references": 7,
+        "citations_exact": true,
+        "active_result_unchanged": true,
+        "quality": {
+          "located_cards": 7,
+          "candidate_cards": 0,
+          "invalid_relations": 0,
+          "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+        }
+      },
+      "cangjie": {
+        "status": "completed",
+        "distillation_id": "d180bbb9-7307-500b-91f5-db1ec2004477",
+        "cards": 30,
+        "verified_references": 33,
+        "citations_exact": true,
+        "active_result_unchanged": true,
+        "quality": {
+          "located_cards": 30,
+          "candidate_cards": 13,
+          "invalid_relations": 2,
+          "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+        }
+      },
+      "sansheng": {
+        "status": "completed",
+        "distillation_id": "14a8f900-63ce-5ae1-99d1-3aa3f910fcbe",
+        "cards": 6,
+        "verified_references": 10,
+        "citations_exact": true,
+        "active_result_unchanged": true,
+        "quality": {
+          "located_cards": 6,
+          "candidate_cards": 0,
+          "invalid_relations": 0,
+          "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+        }
+      },
+      "bolan": {
+        "status": "completed",
+        "distillation_id": "6cbd31bc-12fa-520d-8b00-1f54a2c21e73",
+        "cards": 7,
+        "verified_references": 8,
+        "citations_exact": true,
+        "active_result_unchanged": true,
+        "quality": {
+          "located_cards": 7,
+          "candidate_cards": 0,
+          "invalid_relations": 0,
+          "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+        }
+      },
+      "book-reader": {
+        "status": "completed",
+        "distillation_id": "d5a8ffc8-f5e5-5279-bffe-46d40263f1a8",
+        "cards": 6,
+        "verified_references": 9,
+        "citations_exact": true,
+        "active_result_unchanged": true,
+        "quality": {
+          "located_cards": 6,
+          "candidate_cards": 0,
+          "invalid_relations": 0,
+          "notice": "引用存在性与模型语义评审分别记录；结果仍需人工核对。"
+        }
+      }
+    }
+  },
+  "limits": [
+    "真实验证为原创短资料，长篇出版书的语义质量仍需单独评估。",
+    "本轮服务曾返回结构错误和无效 JSON，显式恢复后完成；未知用量不能按零计算。",
+    "三浏览器引擎覆盖不等于所有品牌发行版均单独实测。"
+  ],
+  "evidence": [
+    "distillation-live.json",
+    "distillation-browser-results.json",
+    "distillation-acceptance.md"
+  ],
+  "post_restart_results": {
+    "book-to-skill": "completed",
+    "cangjie": "completed",
+    "sansheng": "completed",
+    "bolan": "completed",
+    "book-reader": "completed"
+  },
+  "screenshot_followup": {
+    "passed": 3,
+    "failed": 0,
+    "animation_disabled": true,
+    "evidence": "distillation-screenshot-checks.json"
+  }
+}

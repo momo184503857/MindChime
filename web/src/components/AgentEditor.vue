@@ -7,6 +7,7 @@ const props = defineProps<{
   show: boolean;
   agent?: Entity | null;
   sourceId?: string;
+  distillationId?: string;
   generate?: boolean;
 }>();
 const emit = defineEmits(['update:show', 'saved', 'job']);
@@ -17,6 +18,7 @@ const sources = ref<Entity[]>([]),
   profiles = ref<Profile[]>([]);
 const sourceDetails = ref<Record<string, any>>({});
 const sourceVersions = ref<Record<string, number>>({});
+const resultSelections = ref<Record<string, string>>({});
 const title = ref(''),
   purpose = ref(''),
   perspective = ref(''),
@@ -33,11 +35,19 @@ const title = ref(''),
   count = ref(1),
   step = ref('knowledge');
 const matchingCards = computed(() =>
-  cards.value.filter(
-    (c) =>
-      !sourceIds.value.length ||
-      (c.data.source_ids || []).some((id: string) => sourceIds.value.includes(id)),
-  ),
+  cards.value.filter((c) => {
+    const ids: string[] = c.data.source_ids || [];
+    return (
+      c.status !== 'disabled' &&
+      ids.every((sid) => {
+        const selected = resultSelections.value[sid];
+        return (
+          selected !== 'raw' && (!c.data.distillation_id || c.data.distillation_id === selected)
+        );
+      }) &&
+      (!sourceIds.value.length || ids.some((sid) => sourceIds.value.includes(sid)))
+    );
+  }),
 );
 const unreviewed = computed(
   () =>
@@ -59,6 +69,10 @@ watch(
     methods.value = textOf(a?.data.methods);
     boundaries.value = textOf(a?.data.boundaries);
     sourceVersions.value = { ...(a?.data.source_versions || {}) };
+    resultSelections.value = { ...(a?.data.distillation_ids || {}) };
+    for (const sid of a?.data.raw_source_ids || []) resultSelections.value[sid] = 'raw';
+    if (props.sourceId && props.distillationId)
+      resultSelections.value[props.sourceId] = props.distillationId;
     sourceIds.value = a?.data.source_ids || (props.sourceId ? [props.sourceId] : []);
     chapterIds.value = a?.data.chapter_ids || [];
     cardIds.value = a?.data.card_ids || [];
@@ -81,11 +95,33 @@ async function loadChapters() {
   const details = await Promise.all(
     sourceIds.value.map(async (id) => {
       const current = await get<any>('/sources/' + id);
+      current.distillations = await get<Entity[]>('/distillations?source_id=' + id);
       sourceDetails.value[id] = current;
+      if (!resultSelections.value[id])
+        resultSelections.value[id] = current.source.data.active_distillation_id || 'raw';
+      const result = current.distillations.find((r: Entity) => r.id === resultSelections.value[id]);
+      if (result?.data.source_version) sourceVersions.value[id] = result.data.source_version;
       if (!sourceVersions.value[id]) sourceVersions.value[id] = current.source.version;
-      if (sourceVersions.value[id] !== current.source.version)
-        return await get<any>(`/sources/${id}?version=${sourceVersions.value[id]}`);
-      return current;
+      const historical =
+        sourceVersions.value[id] !== current.source.version
+          ? await get<any>(`/sources/${id}?version=${sourceVersions.value[id]}`)
+          : current;
+      if (result) {
+        const full = await get<Entity & { cards: Entity[] }>('/distillations/' + result.id);
+        return {
+          ...historical,
+          chapters: historical.chapters.filter((c: Entity) => full.data.chapter_ids.includes(c.id)),
+          cards: [
+            ...full.cards,
+            ...current.cards.filter(
+              (c: Entity) =>
+                !c.data.distillation_id &&
+                ['user', 'user_original', 'user_modified'].includes(c.data.edit_origin),
+            ),
+          ],
+        };
+      }
+      return historical;
     }),
   );
   chapters.value = details.flatMap((s) => s.chapters || []);
@@ -96,10 +132,30 @@ async function loadChapters() {
   cards.value = [...others, ...selectedCards];
 }
 async function changeVersion() {
+  for (const sid of sourceIds.value) resultSelections.value[sid] = 'raw';
   chapterIds.value = [];
   cardIds.value = [];
   excluded.value = [];
   await run(loadChapters);
+}
+async function changeResult() {
+  chapterIds.value = [];
+  cardIds.value = [];
+  excluded.value = [];
+  for (const sid of sourceIds.value)
+    if (resultSelections.value[sid] === 'raw')
+      sourceVersions.value[sid] = sourceDetails.value[sid]?.source.version;
+  await run(loadChapters);
+}
+function resultBinding() {
+  return {
+    distillation_ids: Object.fromEntries(
+      sourceIds.value
+        .filter((sid) => resultSelections.value[sid] && resultSelections.value[sid] !== 'raw')
+        .map((sid) => [sid, resultSelections.value[sid]]),
+    ),
+    raw_source_ids: sourceIds.value.filter((sid) => resultSelections.value[sid] === 'raw'),
+  };
 }
 async function changeSources(ids: string[]) {
   sourceIds.value = ids;
@@ -121,6 +177,7 @@ async function save(status = 'draft') {
     async () => {
       if (props.generate) {
         const job = await post('/agents/generate', {
+          ...resultBinding(),
           source_ids: sourceIds.value,
           source_versions: sourceVersions.value,
           chapter_ids: chapterIds.value,
@@ -134,6 +191,7 @@ async function save(status = 'draft') {
       } else {
         if (!title.value.trim()) throw new Error('请填写智能体名称');
         const data = {
+          ...resultBinding(),
           source_ids: sourceIds.value,
           source_versions: sourceVersions.value,
           chapter_ids: chapterIds.value,
@@ -203,6 +261,25 @@ async function save(status = 'draft') {
               />
             </n-form-item>
           </div>
+          <n-form-item
+            v-for="sid in sourceIds"
+            :key="sid"
+            :label="(sources.find((s) => s.id === sid)?.title || '资料') + ' · 蒸馏结果'"
+          >
+            <n-select
+              v-model:value="resultSelections[sid]"
+              @update:value="changeResult"
+              :options="[
+                { label: '仅使用原文（不读取知识卡）', value: 'raw' },
+                ...(sourceDetails[sid]?.distillations || [])
+                  .filter((r: Entity) => r.status === 'completed')
+                  .map((r: Entity) => ({
+                    label: `${r.data.method?.name || r.data.method_id} · ${r.created_at.slice(0, 16)}${sourceDetails[sid]?.source.data.active_distillation_id === r.id ? ' · 当前' : ''}`,
+                    value: r.id,
+                  })),
+              ]"
+            />
+          </n-form-item>
           <n-form-item label="限定章节（留空表示使用所选资料的可用蒸馏范围）">
             <n-select
               v-model:value="chapterIds"

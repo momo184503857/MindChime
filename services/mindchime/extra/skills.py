@@ -68,6 +68,19 @@ def create_skill(body: dict):
 @router.post("/skills/generate")
 async def generate_skill(body: dict):
     cards, sources = snapshot_cards(body.get("card_ids", []))
+    result_id = body.get("distillation_id")
+    result_sections = []
+    if result_id:
+        result = require(result_id, "distillation")
+        if result["status"] != "completed" or set(body["card_ids"]) - set(result["data"].get("card_ids", [])):
+            raise HTTPException(422, "请选择完整结果内的知识卡")
+        cards = [db.revision(c["id"], result["data"].get("card_versions", {}).get(c["id"], c["version"])) for c in cards]
+        if any(c is None for c in cards):
+            raise HTTPException(422, "结果知识卡版本缺失")
+        from ..distillation.store import usable_sections
+        result_sections = usable_sections(result, body["card_ids"])
+        if len(json.dumps(result_sections, ensure_ascii=False)) > 40000:
+            raise HTTPException(422, "方法特色成果超过单次生成范围，请在方法库中选择具体卡片生成，不会静默截断")
     if body.get("agent_id"):
         require(body["agent_id"], "agent", usable=True)
     profile_id = await preflight("agent")
@@ -80,6 +93,8 @@ async def generate_skill(body: dict):
             "model_profile_id": profile_id,
             "purpose": str(body.get("purpose", ""))[:5000],
             "agent_id": body.get("agent_id"),
+            "distillation_id": result_id,
+            "method_sections": result_sections,
         },
         body.get("request_id"),
     )
@@ -308,6 +323,7 @@ async def generate(ctx, job):
             "source_ids": payload["source_ids"],
             "agent_id": payload.get("agent_id"),
             "origin": "ai",
+            "distillation_id": payload.get("distillation_id"),
             "references": [r for c in payload["cards"] for r in c["data"].get("references", [])],
         },
     )

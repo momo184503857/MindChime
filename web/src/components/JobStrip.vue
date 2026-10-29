@@ -15,7 +15,7 @@ async function act(action: string) {
       emit('changed');
     },
     action === 'pause'
-      ? '当前发言结束后暂停'
+      ? '当前模型调用完成后暂停'
       : action === 'cancel'
         ? '已请求结束'
         : '任务状态已更新',
@@ -32,7 +32,10 @@ async function act(action: string) {
     </div>
     <div class="inline-actions">
       <n-button
-        v-if="['running', 'processing'].includes(status)"
+        v-if="
+          ['running', 'processing'].includes(status) &&
+          ['discussion', 'distill'].includes(job.data.kind)
+        "
         size="small"
         :loading="busy"
         @click="act('pause')"

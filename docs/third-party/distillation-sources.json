@@ -1,0 +1,32 @@
+[
+  {
+    "repository": "virgiliojr94/book-to-skill",
+    "commit": "7540eefbe74933f5fc84c86becac52486b347778",
+    "skill_sha256": "6a3d7ce3d3689020cd4089f8cad9c0a9f8237abfaf896ff20677031dac4592b1",
+    "license_file": "virgiliojr94--book-to-skill-LICENSE.txt"
+  },
+  {
+    "repository": "kangarooking/cangjie-skill",
+    "commit": "a28de55ba881b9928956a55048f743f7a9e3b23e",
+    "skill_sha256": "cd9e3e844cf405773a30b2640a56e07a77d66caf909055a1ebe0808a561d3c45",
+    "license_file": "kangarooking--cangjie-skill-LICENSE.txt"
+  },
+  {
+    "repository": "sanshengai/sansheng-distill",
+    "commit": "a411cc2c923eee070f0e77a44239ee58164a335c",
+    "skill_sha256": "7522b21cb6af94671c50f70a96b74e59a799b15649f8f6df21f9a61424da2de1",
+    "license_file": "sanshengai--sansheng-distill-LICENSE.txt"
+  },
+  {
+    "repository": "BlackFast/bolan-skill",
+    "commit": "890e71ab0ee7a74999535d9d41ac714a6891e534",
+    "skill_sha256": "de3a52d79ab934512ea51fed0859817ccb21cdeb9b308eb93bcec68e0d91bdb7",
+    "license_file": "BlackFast--bolan-skill-LICENSE.txt"
+  },
+  {
+    "repository": "silentdog918/book-reader-skill",
+    "commit": "f910584b7abdeb7f589dd3616e45252836bd71b4",
+    "skill_sha256": "9505288c62d26f63e83b99ae7a543487dfa556323486804bc88af9f477cee460",
+    "license_file": "silentdog918--book-reader-skill-LICENSE.txt"
+  }
+]

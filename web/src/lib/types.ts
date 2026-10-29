@@ -160,3 +160,23 @@ export function locationLabel(locator: any): string {
     return `正文字符 ${Number(locator.start) + 1}–${locator.end}`;
   return '原始文档分段';
 }
+
+export interface DistillationMethod {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  cost: string;
+  upstream: string;
+  upstream_version: string;
+  license: string;
+  adaptation: string;
+  stages: { id: string; title: string; instruction: string; mode: string }[];
+}
+export interface DistillationInput {
+  method_id: string;
+  chapter_ids: string[];
+  prompt: string;
+  model_profile_id?: string;
+  request_id: string;
+}

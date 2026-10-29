@@ -33,6 +33,8 @@ async def lifespan(app):
     register_handlers()
     from .enhancements import register_handlers as register_extra
     register_extra()
+    from .distillation.store import migrate_legacy
+    migrate_legacy()
     stamp = datetime.now(timezone.utc).isoformat()
     if db.get("business-runtime"):
         db.update("business-runtime", data={"started_at": stamp, "heartbeat": stamp}, status="running")
@@ -213,6 +215,8 @@ def import_content(raw, filename, source_title=None, author="", duplicate_action
             "format": parsed["format"], "characters": parsed["characters"], "warnings": parsed["warnings"], "demo": demo,
             "original_available": True, "source_ids": []}
     if duplicate_action == "version":
+        from .distillation.store import invalidate_current
+        invalidate_current(prior["id"])
         source = db.update(prior["id"], data=info, title=name, status=parsed["status"])
     else:
         source = db.create("source", name, info, status=parsed["status"])
@@ -306,7 +310,7 @@ def source_file(source_id: str, version: int | None = None):
 
 
 def affected_source(source_id):
-    affected = {k: [] for k in ["card", "agent", "conversation", "message", "artifact", "skill", "run", "memory", "relation", "job"]}
+    affected = {k: [] for k in ["card", "agent", "conversation", "message", "artifact", "skill", "run", "memory", "relation", "distillation", "job"]}
     for kind in affected:
         affected[kind] = [r for r in db.list(kind) if source_id in source_ids(r["data"]) or any(x.get("source_id") == source_id for x in r["data"].get("references", []))]
     agent_ids = {a["id"] for a in affected["agent"]}
@@ -384,6 +388,8 @@ async def delete_source(source_id: str, mode: str = "derived", history: str = "k
     for job in affected["job"]:
         replace_without_revisions(job, {"kind": job["data"].get("kind"), "input": {"source_id": source_id}, "stage": "来源内容已清理", "steps": {}}, "cancelled")
     if mode == "derived":
+        for result in affected["distillation"]:
+            db.purge(result["id"])
         for card in affected["card"]:
             db.purge(card["id"])
         for kind in ("skill", "memory", "relation"):
@@ -441,6 +447,9 @@ def edit_chapter(chapter_id: str, body: dict):
         changes["user_corrected"] = True
     result = db.update(chapter_id, title=title(body["title"]) if "title" in body else None, data=changes)
     source = get(chapter["data"]["source_id"], "source")
+    if "text" in changes and changes["text"] != chapter["data"].get("text"):
+        from .distillation.store import invalidate_current
+        invalidate_current(source["id"], chapter_id)
     db.update(source["id"], data={"chapter_versions": {**source["data"].get("chapter_versions", {}), chapter_id: result["version"]}})
     return result
 
@@ -465,6 +474,8 @@ def merge_chapters(body: dict):
     # Preserve immutable old chapters for existing citations, remove them only from current source view.
     new_ids = [cid for cid in ordered if cid not in ids]
     new_ids.insert(min(ordered.index(cid) for cid in ids), merged["id"])
+    from .distillation.store import invalidate_current
+    invalidate_current(source_id)
     db.update(source_id, data={"chapter_ids": new_ids, "chapter_versions": {cid: get(cid, "chapter")["version"] for cid in new_ids}})
     return merged
 
@@ -484,6 +495,8 @@ def split_chapter(chapter_id: str, body: dict):
     ids = source["data"]["chapter_ids"]
     index = ids.index(chapter_id)
     next_ids = ids[:index]+[p["id"] for p in pieces]+ids[index+1:]
+    from .distillation.store import invalidate_current
+    invalidate_current(source["id"])
     db.update(source["id"], data={"chapter_ids": next_ids, "chapter_versions": {cid: get(cid, "chapter")["version"] for cid in next_ids}})
     return pieces
 
@@ -502,10 +515,23 @@ async def start_distill(source_id: str, body: dict):
     count = sum(len(re.sub(r"\s", "", c["data"].get("text", ""))) for c in selected)
     if count > int(settings().get("max_distill_characters", 500000)):
         raise ValueError("所选内容超过单次蒸馏上限，请减少章节；不会静默截断。")
+    from .distillation.registry import get_method
+    method = get_method(body.get("method_id", "basic"))
+    if "prompt" in body and "focus" in body and body["prompt"] != body["focus"]:
+        raise ValueError("prompt 与 focus 不能填写不同内容。")
+    prompt = body.get("prompt", body.get("focus", ""))
+    if not isinstance(prompt, str) or len(prompt) > 5000:
+        raise ValueError("蒸馏提示词最多 5000 字。")
     profile = await ensure_model("distill", body.get("model_profile_id"))
-    return enqueue("distill", {"source_id": source_id, "source_version": get(source_id,"source")["version"],
+    profiles = await proxy("GET", "/profiles")
+    pinned = {p["id"]: p["version"] for p in profiles}
+    job = enqueue("distill", {"source_id": source_id, "source_version": get(source_id,"source")["version"],
         "chapter_ids": ids, "chapter_versions": {c["id"]: c["version"] for c in selected},
-        "focus": body.get("focus", ""), "model_profile_id": profile}, body.get("request_id"))
+        "focus": prompt, "prompt": prompt, "method_id": method.id, "method_snapshot": method.manifest(),
+        "result_schema_version": 1, "model_profile_id": profile}, body.get("request_id"), profile_snapshots=pinned)
+    if not job["data"].get("profile_snapshots"):
+        job = db.update(job["id"], data={"profile_snapshots": pinned, "method_name": method.name})
+    return job
 
 
 @router.post("/sources/{source_id}/ocr")
@@ -892,9 +918,9 @@ async def control_job(job_id: str, action: str):
     job = get(job_id, "job")
     status = job["status"]
     if action == "pause":
-        if job["data"]["kind"] != "discussion" or status not in {"queued", "running"}:
-            raise ValueError("只有待运行或运行中的讨论可以暂停。")
-        job = db.update(job_id, status="paused" if status == "queued" else "pause_requested", data={"stage": "当前发言完成后暂停"})
+        if job["data"]["kind"] not in {"discussion", "distill"} or status not in {"queued", "running"}:
+            raise ValueError("只有待运行或运行中的讨论、蒸馏可以暂停。")
+        job = db.update(job_id, status="paused" if status == "queued" else "pause_requested", data={"stage": "当前模型调用完成后暂停"})
     elif action == "cancel":
         if status not in ACTIVE:
             raise ValueError("此任务已结束。")
@@ -956,3 +982,6 @@ def search(q: str, kind: str | None = None):
 app.include_router(router)
 from .enhancements import router as extra_router
 app.include_router(extra_router, prefix="/api/v1")
+
+from .distillation.api import router as distillation_router
+app.include_router(distillation_router, prefix="/api/v1")

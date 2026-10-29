@@ -133,9 +133,13 @@ def decode_structured(text, schema):
         raise ProviderError("invalid_json", "模型输出不是有效 JSON；已保留生成状态，请检查或重试") from None
     try:
         validator_for(schema)(schema, format_checker=FormatChecker()).validate(value)
-    except ValidationError:
+    except ValidationError as exc:
+        # Schema paths describe caller-owned rules, never echo model text, excerpts or secret values.
+        rule_path = "/".join(str(part) for part in exc.absolute_schema_path)
+        missing = [key for key in exc.validator_value if key not in exc.instance] if exc.validator == "required" and isinstance(exc.instance, dict) else []
+        suffix = "；缺少字段：" + ",".join(missing) if missing else ""
         raise ProviderError(
-            "schema_validation_failed", "模型输出未满足请求指定的字段和结构要求，未交付为成功"
+            "schema_validation_failed", f"模型输出未满足请求指定的字段和结构要求（规则位置：{rule_path}{suffix}），未交付为成功"
         ) from None
     return value
 
