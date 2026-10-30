@@ -19,9 +19,20 @@ defineEmits(['retry']);
   </div>
   <div v-else-if="empty" class="empty-state">
     <slot name="icon" />
-    <h2>{{ title || '还没有内容' }}</h2>
-    <p>{{ description || '从一个小小的开始，建立你的知识工作区。' }}</p>
+    <div class="empty-heading">
+      <h2>{{ title || '还没有内容' }}</h2>
+      <HelpTip v-if="description" :label="(title || '空状态') + '说明'" :text="description" />
+    </div>
     <slot name="action" />
   </div>
   <slot v-else />
 </template>
+
+<style scoped>
+.empty-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 20px;
+}
+</style>

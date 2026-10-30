@@ -28,5 +28,13 @@
     "commit": "f910584b7abdeb7f589dd3616e45252836bd71b4",
     "skill_sha256": "9505288c62d26f63e83b99ae7a543487dfa556323486804bc88af9f477cee460",
     "license_file": "silentdog918--book-reader-skill-LICENSE.txt"
+  },
+  {
+    "repository": "alchaincyf/nuwa-skill",
+    "commit": "7c7edfeb9d90a28b1f79e7847e1ba27a698cdc24",
+    "skill_sha256": "218d2d2b0003255d152772f46586a39874d94d0df3480b5a6f51a274ef2249fd",
+    "framework_sha256": "71ba03c80f86141a5adaec1690e510d821ecfc30eca5dcf7b455ec6df2339e81",
+    "license_file": "alchaincyf--nuwa-skill-LICENSE.txt",
+    "adaptation": "人物多资料思想蒸馏；串行阶段；联网默认关闭；结构化画像，不执行上游脚本"
   }
 ]

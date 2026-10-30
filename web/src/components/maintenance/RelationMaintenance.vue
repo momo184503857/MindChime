@@ -112,9 +112,9 @@ defineExpose({ edit, approve, disable });
         :options="sources.map((s) => ({ label: s.title, value: s.id }))"
       />
     </n-form-item>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="关系提取说明">
       选择多份资料可比较跨书关系。模型只提出候选，不自动合并同名概念，也不把相似视为同义。此操作会调用模型。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="generateOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="generate">生成候选</n-button>

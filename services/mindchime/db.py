@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import JSON, Index, Integer, String, Text, create_engine, event, select
+from sqlalchemy import JSON, Index, Integer, String, Text, create_engine, event, select, inspect
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 
@@ -34,6 +34,7 @@ class Record(Base):
     version: Mapped[int] = mapped_column(Integer, default=1)
     parent_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     data: Mapped[dict] = mapped_column(JSON, default=dict)
+    owner_user_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     created_at: Mapped[str] = mapped_column(String, default=now)
     updated_at: Mapped[str] = mapped_column(String, default=now)
 
@@ -43,6 +44,22 @@ class Revision(Base):
     record_id: Mapped[str] = mapped_column(String, primary_key=True)
     version: Mapped[int] = mapped_column(Integer, primary_key=True)
     snapshot: Mapped[dict] = mapped_column(JSON)
+
+
+class Publication(Base):
+    __tablename__ = "publications"
+    record_id: Mapped[str] = mapped_column(String, primary_key=True)
+    version: Mapped[int] = mapped_column(Integer)
+    manifest: Mapped[dict] = mapped_column(JSON)
+    published_at: Mapped[str] = mapped_column(String, default=now)
+
+
+class PublishedRevision(Base):
+    __tablename__ = "published_revisions"
+    record_id: Mapped[str] = mapped_column(String, primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    manifest: Mapped[dict] = mapped_column(JSON)
+    published_at: Mapped[str] = mapped_column(String, default=now)
 
 
 class Event(Base):
@@ -62,7 +79,7 @@ TRANSIENT_KINDS = {"job", "runtime", "settings", "import_preview", "vector"}
 
 def as_dict(record: Record) -> dict:
     return {key: copy.deepcopy(getattr(record, key)) for key in (
-        "id", "kind", "title", "status", "version", "parent_id", "data", "created_at", "updated_at"
+        "id", "kind", "title", "status", "version", "parent_id", "data", "owner_user_id", "created_at", "updated_at"
     )}
 
 
@@ -83,6 +100,12 @@ class Database:
             connection.execute("PRAGMA foreign_keys=ON")
             connection.execute("PRAGMA busy_timeout=30000")
 
+        # Upgrade the legacy envelope before ORM queries (create_all does not add columns).
+        if "records" in inspect(self.engine).get_table_names():
+            if "owner_user_id" not in {c["name"] for c in inspect(self.engine).get_columns("records")}:
+                with self.engine.begin() as connection:
+                    connection.exec_driver_sql("ALTER TABLE records ADD COLUMN owner_user_id TEXT")
+                    connection.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_records_owner_user_id ON records(owner_user_id)")
         Base.metadata.create_all(self.engine)
         with self.engine.begin() as connection:
             connection.exec_driver_sql(
@@ -91,10 +114,21 @@ class Database:
         return self
 
     def create(self, kind: str, title: str, data: dict, status: str = "active",
-               parent_id: str | None = None, id: str | None = None) -> dict:
+               parent_id: str | None = None, id: str | None = None, owner_user_id: str | None = None) -> dict:
+        from .access import current, PRIVATE_KINDS, PUBLIC_KINDS, require_admin
+        actor = current()
+        if kind in PUBLIC_KINDS:
+            require_admin()
+        owner = (actor["id"] if actor else "local-admin") if kind in PRIVATE_KINDS else None
+        if owner_user_id is not None and actor is None:
+            owner = owner_user_id
+        if parent_id and kind in PRIVATE_KINDS:
+            parent = self.get(parent_id)
+            if parent and parent.get("owner_user_id"):
+                owner = parent["owner_user_id"]
         stamp = now()
         record = Record(id=id or str(uuid.uuid4()), kind=kind, title=title, data=copy.deepcopy(data),
-                        status=status, version=1, parent_id=parent_id, created_at=stamp, updated_at=stamp)
+                        status=status, version=1, parent_id=parent_id, owner_user_id=owner, created_at=stamp, updated_at=stamp)
         with Session(self.engine) as session, session.begin():
             session.add(record)
             session.flush()
@@ -109,7 +143,21 @@ class Database:
             record = session.get(Record, id)
             if not record or (kind and record.kind != kind) or (not include_deleted and record.status == "deleted"):
                 return None
-            return as_dict(record)
+            return self._visible(as_dict(record))
+
+    def _visible(self, record):
+        from .access import current, PRIVATE_KINDS, PUBLIC_KINDS
+        actor = current()
+        if actor is None:
+            return record
+        if record["kind"] in PRIVATE_KINDS:
+            if record.get("owner_user_id") == actor["id"] or (record["kind"] == "job" and actor["role"] == "admin"):
+                return record
+            return None
+        if record["kind"] in PUBLIC_KINDS and actor["role"] != "admin":
+            from .publications import visible_snapshot
+            return visible_snapshot(record["id"])
+        return record
 
     def list(self, kind: str | None = None, parent_id: str | None = None,
              include_deleted: bool = False) -> list[dict]:
@@ -121,11 +169,12 @@ class Database:
         if not include_deleted:
             stmt = stmt.where(Record.status != "deleted")
         with Session(self.engine) as session:
-            return [as_dict(r) for r in session.scalars(stmt)]
+            return [v for r in session.scalars(stmt) if (v := self._visible(as_dict(r))) is not None]
 
     def update(self, id: str, data: dict | None = None, title: str | None = None,
                status: str | None = None, expected_version: int | None = None,
                replace_data: bool = False) -> dict:
+        self._check_write(id)
         # BEGIN IMMEDIATE serializes read-modify-write across API and worker.
         with Session(self.engine) as session:
             session.connection().exec_driver_sql("BEGIN IMMEDIATE")
@@ -154,24 +203,54 @@ class Database:
     def delete(self, id: str) -> dict:
         return self.update(id, status="deleted")
 
-    def purge(self, id: str) -> None:
+    def purge(self, id: str, preserve_publications: bool = False) -> None:
         """Remove payloads and old revisions for explicit destructive cleanup."""
+        self._check_write(id)
+        if not preserve_publications:
+            from .publications import purge_cached_record
+            purge_cached_record(id)
         from sqlalchemy import delete
         with self.engine.begin() as connection:
             connection.execute(delete(Revision).where(Revision.record_id == id))
             connection.execute(delete(Record).where(Record.id == id))
             connection.exec_driver_sql("DELETE FROM search_fts WHERE id=?", (id,))
 
+    def _check_write(self, id):
+        from .access import current, PUBLIC_KINDS, require_admin, require_owner
+        visible = self.get(id, include_deleted=True)
+        if current() and visible is None:
+            from fastapi import HTTPException
+            raise HTTPException(404, "内容不存在或无权访问")
+        if visible and visible["kind"] in PUBLIC_KINDS:
+            require_admin()
+        elif visible and visible["kind"] != "job":
+            require_owner(visible)
+        elif visible and current() and current()["role"] != "admin":
+            require_owner(visible)
+
     def revisions(self, id: str) -> list[dict]:
+        from .access import current, PUBLIC_KINDS
+        record = self.get(id)
+        if current() and not record:
+            return []
+        if current() and current()["role"] != "admin" and record and record["kind"] in PUBLIC_KINDS:
+            return [record]
         with Session(self.engine) as session:
-            return [copy.deepcopy(r.snapshot) for r in session.scalars(
+            return [{**copy.deepcopy(r.snapshot), "owner_user_id": record.get("owner_user_id") if record else None} for r in session.scalars(
                 select(Revision).where(Revision.record_id == id).order_by(Revision.version.desc())
             )]
 
     def revision(self, id: str, version: int) -> dict | None:
+        from .access import current, PUBLIC_KINDS
+        record = self.get(id)
+        if current() and not record:
+            return None
+        if current() and current()["role"] != "admin" and record and record["kind"] in PUBLIC_KINDS:
+            from .publications import visible_snapshot
+            return visible_snapshot(id, version)
         with Session(self.engine) as session:
             r = session.get(Revision, (id, version))
-            return copy.deepcopy(r.snapshot) if r else None
+            return {**copy.deepcopy(r.snapshot), "owner_user_id": record.get("owner_user_id") if record else None} if r else None
 
     def emit(self, topic: str, event: str, data: dict) -> dict:
         with Session(self.engine) as session, session.begin():
@@ -224,6 +303,11 @@ class Database:
 
     def search(self, query: str, kind: str | None = None, limit: int = 100) -> list[dict]:
         import re
+        from .access import current
+        if current() and current()["role"] != "admin":
+            import json
+            words = re.findall(r"[A-Za-z0-9_]+|[\u3400-\u9fff]", query.lower())
+            return [r for r in self.list(kind) if words and all(w in (r["title"] + json.dumps(r["data"], ensure_ascii=False)).lower() for w in words)][:limit]
         terms = re.findall(r"[A-Za-z0-9_]+", query.lower())
         for run in re.findall(r"[\u3400-\u9fff]+", query):
             terms.extend(run[i:i + 2] for i in range(max(1, len(run) - 1)))

@@ -24,13 +24,14 @@ class Method:
     stages: tuple[Stage, ...]
     version: str = "1.0.0"
     license: str = "MIT"
+    distillation_type: str = "knowledge"
 
     def manifest(self):
         return {
             **asdict(self),
             "stages": [asdict(stage) for stage in self.stages],
             "external_sources": False,
-            "adaptation": "MindChime 书内适配；独立串行阶段，不自动搜索、安装或发布。模型评审不等于事实认证。",
+            "adaptation": "MindChime 人物多资料适配；串行阶段，联网默认关闭，思想资产独立审核发布。" if self.distillation_type == "thought" else "MindChime 书内适配；独立串行阶段，不自动搜索、安装或发布。模型评审不等于事实认证。",
         }
 
 

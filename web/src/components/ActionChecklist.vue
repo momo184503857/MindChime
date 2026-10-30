@@ -106,9 +106,13 @@ function remove(index: number) {
         </p>
       </div>
     </div>
-    <p v-if="!items.length" class="muted small">
-      {{ editing ? '添加具体行动、计划日期和复盘问题。' : '还没有结构化行动项，可通过编辑添加。' }}
-    </p>
+    <span v-if="!items.length" class="muted small">
+      暂无行动项
+      <HelpTip
+        label="行动清单说明"
+        :text="editing ? '添加具体行动、计划日期和复盘问题。' : '可通过编辑添加结构化行动项。'"
+      />
+    </span>
   </section>
 </template>
 <style scoped>

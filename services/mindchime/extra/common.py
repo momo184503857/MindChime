@@ -17,7 +17,8 @@ async def preflight(purpose: str, profile_id: str | None = None) -> str:
         profile_id or config.get("purpose_profiles", {}).get(purpose) or config.get("default_profile_id")
     )
     if not profile_id:
-        raise HTTPException(409, "请先在模型设置中选择可用模型")
+        from ..access import is_admin
+        raise HTTPException(409, "请先在模型设置中选择可用模型" if is_admin() else "服务模型尚未配置，请联系管理员")
     try:
         async with httpx.AsyncClient(
             base_url=AI_URL, headers=ai_headers(), trust_env=False, timeout=10

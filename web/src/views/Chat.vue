@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../lib/auth';
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
@@ -272,7 +273,7 @@ async function saveSettings() {
       data: {
         background: settingsBackground.value,
         shared_card_ids: sharedCards.value,
-        general_knowledge_overrides: generalOverrides.value,
+        ...(isAdmin.value ? { general_knowledge_overrides: generalOverrides.value } : {}),
       },
     });
     if (JSON.stringify(settingsAgents.value) !== JSON.stringify(current.value?.data.agent_ids))
@@ -535,7 +536,10 @@ async function del() {
               <h2>
                 {{ isGroup ? '发一个问题，或开启有限轮次的圆桌。' : '从你正在思考的问题开始。' }}
               </h2>
-              <p>背景越清楚，讨论越有针对性。资料不足时，智能体应明确告诉你。</p>
+              <HelpTip
+                label="对话背景说明"
+                text="背景越清楚，讨论越有针对性。资料不足时，智能体应明确告诉你。"
+              />
             </div>
             <article
               v-for="m in messages"
@@ -723,7 +727,10 @@ async function del() {
               "
             />
             <div class="input-footer">
-              <span>⌘ / Ctrl + Enter 发送 · 外部模型调用会产生服务商用量</span>
+              <HelpTip
+                label="发送与快捷键说明"
+                text="⌘ / Ctrl + Enter 发送；外部模型调用会产生服务商用量。"
+              />
               <n-button
                 type="primary"
                 :disabled="!input.trim() || (!!activeJob && !running)"
@@ -735,7 +742,7 @@ async function del() {
               </n-button>
             </div>
           </div>
-          <p class="composer-note">AI 的归纳不等于事实已核实。重要观点可以展开来源核对。</p>
+          <HelpTip label="使用说明">AI 的归纳不等于事实已核实。重要观点可以展开来源核对。</HelpTip>
         </div>
       </template>
     </section>
@@ -844,7 +851,10 @@ async function del() {
           discussion.mode === 'dynamic' ? '动态主持另有有限的选人调用。' : ''
         }}
       </p>
-      <p>内容将发送到各成员选定的模型；关掉网页后继续至既定上限。立即结束不会自动追加总结。</p>
+      <HelpTip
+        label="讨论执行说明"
+        text="内容将发送到各成员选定的模型；关掉网页后继续至既定上限。立即结束不会自动追加总结。"
+      />
     </div>
     <div class="modal-footer">
       <n-button @click="discussionOpen = false">返回</n-button>
@@ -902,7 +912,7 @@ async function del() {
                 a.version
               }}
             </small>
-            <div class="policy-switch">
+            <div v-if="isAdmin" class="policy-switch">
               <n-switch
                 size="small"
                 :value="generalOverrides[a.id] ?? a.data.general_knowledge ?? false"
@@ -918,8 +928,12 @@ async function del() {
         </div>
       </div>
       <div class="section-spaced">
-        <h3>长期记忆</h3>
-        <p class="field-hint">提取候选后仍需到记忆页面确认，不会自动共享到其他智能体。</p>
+        <div class="heading-with-help">
+          <h3>长期记忆</h3>
+          <HelpTip label="长期记忆说明">
+            提取候选后仍需到记忆页面确认，不会自动共享到其他智能体。
+          </HelpTip>
+        </div>
         <n-select
           v-model:value="memoryAgent"
           :options="memberOptions"
@@ -974,7 +988,7 @@ async function del() {
         <n-input v-model:value="saveText" type="textarea" :autosize="{ minRows: 8, maxRows: 18 }" />
       </n-form-item>
     </n-form>
-    <p class="field-hint">保存已有文本不调用模型，保留原会话入口和引用。</p>
+    <HelpTip label="使用说明">保存已有文本不调用模型，保留原会话入口和引用。</HelpTip>
     <div class="modal-footer">
       <n-button @click="saveOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="saveArtifact">保存</n-button>

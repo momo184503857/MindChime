@@ -110,6 +110,7 @@ const editing = ref(false),
   card = ref<Entity | null>(null),
   evidence = ref<Reference | null>(null),
   evidenceOpen = ref(false);
+const distillationType = ref<'knowledge' | 'thought'>('knowledge');
 const methods = ref<DistillationMethod[]>([]),
   methodId = ref('cangjie');
 const profiles = ref<Profile[]>([]),
@@ -134,13 +135,14 @@ function showEvidence(ref: Reference) {
   evidenceOpen.value = true;
 }
 async function configure() {
+  distillationType.value = 'knowledge';
   await run(async () => {
     const [p, catalog] = await Promise.all([
       get<Profile[]>('/profiles'),
       get<{ methods: DistillationMethod[] }>('/distillation-methods'),
     ]);
     profiles.value = p;
-    methods.value = catalog.methods;
+    methods.value = catalog.methods.filter(m => m.distillation_type !== 'thought');
     distillOpen.value = true;
   });
 }
@@ -282,6 +284,7 @@ async function restore() {
   <ResourceState :loading="loading" :error="error" @retry="reload()">
     <template v-if="source">
       <PageHeader
+        description-is-metadata
         :title="source.title"
         :description="`${source.data.author || '作者未填写'} · ${source.data.format?.toUpperCase() || '文本资料'} · ${dateText(source.created_at)}`"
         eyebrow="SOURCE & KNOWLEDGE"
@@ -404,16 +407,23 @@ async function restore() {
                   </n-button>
                 </div>
               </div>
-              <n-alert v-if="selectedChapter.data.ocr" type="info" :show-icon="false">
-                此段来自 OCR。识别可能有误，请对照原文件核对。
-              </n-alert>
+              <div v-if="selectedChapter.data.ocr" class="inline-actions">
+                <n-tag size="small">OCR</n-tag>
+                <HelpTip
+                  label="OCR 内容说明"
+                  text="此段来自 OCR。识别可能有误，请对照原文件核对。"
+                />
+              </div>
               <p v-if="selectedChapter.data.text" class="source-text">
                 {{ selectedChapter.data.text }}
               </p>
               <div v-else class="small-empty">
                 <ScanText :size="30" />
                 <h3>这一页尚未提取到文字</h3>
-                <p class="muted">可使用具备图片识别能力的模型进行 OCR，或检查原文件是否可读。</p>
+                <HelpTip
+                  label="扫描页识别说明"
+                  text="可使用具备图片识别能力的模型进行 OCR，或检查原文件是否可读。"
+                />
                 <n-button @click="ocr" style="margin-top: 16px">识别所选页面</n-button>
               </div>
             </article>
@@ -434,7 +444,10 @@ async function restore() {
               placeholder="全部类型"
               style="width: 160px"
             />
-            <span class="muted small">AI 生成不代表内容已被核实。可修改、标记疑问或核对来源。</span>
+            <HelpTip
+              label="知识卡核对说明"
+              text="AI 生成不代表内容已被核实。可修改、标记疑问或核对来源。"
+            />
             <n-button
               style="margin-left: auto"
               @click="
@@ -556,6 +569,8 @@ async function restore() {
     <n-alert v-if="selectedChars > 500000" type="error" style="margin-top: 16px">
       超过默认 50 万字符限制，请缩小章节范围。
     </n-alert>
+    <n-radio-group v-model:value="distillationType" style="margin-bottom:20px"><n-radio-button value="knowledge">知识蒸馏</n-radio-button><n-radio-button value="thought">思想蒸馏 · 女娲</n-radio-button></n-radio-group>
+    <template v-if="distillationType === 'knowledge'">
     <DistillationMethodPicker v-model="methodId" :methods="methods" />
     <n-form style="margin-top: 20px">
       <n-form-item label="模型">
@@ -580,9 +595,9 @@ async function restore() {
         />
       </n-form-item>
     </n-form>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="资料处理说明">
       所选原文将发送到指定模型服务，仅依据本书生成公共结果和方法特色成果。每次结果独立保存，需手动设为当前结果。模型费用由服务商收取；关掉网页后，已确认任务会继续。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="distillOpen = false">返回调整</n-button>
       <n-button
@@ -594,12 +609,14 @@ async function restore() {
         确认开始
       </n-button>
     </div>
+    </template>
+    <div v-else class="surface panel-pad"><p>思想蒸馏以人物为中心，可组合多份资料，独立生成思想画像。联网默认关闭。</p><n-button type="primary" @click="router.push({path:'/admin/thoughts',query:{source:id,create:'1'}})">选择人物并继续</n-button></div>
   </n-modal>
   <n-modal v-model:show="splitOpen" preset="card" title="拆分章节" style="width: 520px">
-    <p class="field-hint">
+    <HelpTip label="资料处理说明">
       在指定字符位置拆成两段，保留对应原文位置。当前共
       {{ selectedChapter?.data.text?.length || 0 }} 字符。
-    </p>
+    </HelpTip>
     <n-input-number
       v-model:value="splitOffset"
       :min="1"
@@ -644,14 +661,16 @@ async function restore() {
     </div>
   </n-modal>
   <n-modal v-model:show="deleteOpen" preset="card" title="确认删除范围" style="width: 650px">
-    <n-alert type="warning" :show-icon="false">
+    <HelpTip label="资料处理说明">
       删除不会自动清除你所有独立笔记。请明确选择原文件、知识以及历史摘录的处理范围。
-    </n-alert>
+    </HelpTip>
     <n-radio-group v-model:value="deleteMode" class="delete-options">
       <n-radio value="file">仅删除原始文件，保留知识卡与历史记录</n-radio>
       <n-radio value="derived">删除资料及派生知识，包括所有引用本资料的混合知识卡</n-radio>
     </n-radio-group>
-    <p class="field-hint">受影响图谱、Skill、相关知识性记忆将保留并置灰，停止使用。</p>
+    <HelpTip label="资料处理说明">
+      受影响图谱、Skill、相关知识性记忆将保留并置灰，停止使用。
+    </HelpTip>
     <div v-if="impact" class="subtle-note">
       关联影响：{{
         Object.entries(impact)
@@ -675,7 +694,7 @@ async function restore() {
     </div>
   </n-modal>
   <n-modal v-model:show="restoreOpen" preset="card" title="恢复知识卡版本" style="width: 460px">
-    <p class="field-hint">恢复会创建一个新版本，已存在的会话不受影响。</p>
+    <HelpTip label="资料处理说明">恢复会创建一个新版本，已存在的会话不受影响。</HelpTip>
     <n-input-number v-model:value="restoreVersion" :min="1" :max="restoreCard?.version || 1" />
     <div class="modal-footer">
       <n-button @click="restoreOpen = false">取消</n-button>

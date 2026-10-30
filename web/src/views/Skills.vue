@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../lib/auth';
 import { switchArea } from '../lib/navigation';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -32,11 +33,9 @@ const { data: runs, reload: reloadRuns } = useResource(
   4000,
 );
 const { busy, run, message } = useAction();
-const agents = ref<Entity[]>([]);
 const tab = ref(props.management ? 'methods' : String(route.query.tab || 'methods')),
   selected = ref<Entity | null>(null),
   detailOpen = ref(false);
-const agentId = ref<string | null>(null);
 const startOpen = ref(false),
   startSkill = ref<Entity | null>(null),
   startInputs = ref<Record<string, string>>({});
@@ -47,12 +46,7 @@ const practiceOpen = ref(false),
   useAI = ref(false);
 const practiceSteps = computed(() => practice.value?.data.skill_snapshot?.data.steps || []);
 const currentStep = computed(() => practiceSteps.value[practice.value?.data.step_index || 0]);
-onMounted(
-  () =>
-    void run(async () => {
-      agents.value = await get('/agents');
-    }),
-);
+
 watch(runs, (items) => {
   if (practice.value) {
     const updated = items.find((r) => r.id === practice.value!.id);
@@ -68,7 +62,6 @@ function start(skill: Entity) {
   startInputs.value = Object.fromEntries(
     (skill.data.inputs || []).map((name: string) => [name, '']),
   );
-  agentId.value = skill.data.agent_id || null;
   startOpen.value = true;
 }
 async function startRun() {
@@ -76,7 +69,6 @@ async function startRun() {
   await run(async () => {
     practice.value = await post(`/skills/${startSkill.value!.id}/runs`, {
       inputs: startInputs.value,
-      agent_id: agentId.value,
     });
     practiceOpen.value = true;
     void router.replace({ query: { tab: 'runs', run: practice.value!.id } });
@@ -163,13 +155,13 @@ watch(tab, (value) => {
     description="把方法变成可重复的小步骤，保留每次实践的真实结果。"
   >
     <n-button
-      v-if="management"
+      v-if="isAdmin && (management)"
       @click="router.push(switchArea(route, management ? 'front' : 'admin'))"
     >
       前台查看
     </n-button>
     <SkillMaintenance v-if="management" ref="maintenance" @changed="reload(true)" />
-    <n-button v-else @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
+    <n-button v-else-if="isAdmin" @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
       管理方法
     </n-button>
   </PageHeader>
@@ -185,7 +177,7 @@ watch(tab, (value) => {
       >
         <template #icon><ListChecks :size="36" :stroke-width="1.3" /></template>
         <template #action>
-          <n-button @click="router.push('/admin/skills')">去后台维护方法</n-button>
+          <n-button v-if="isAdmin" @click="router.push('/admin/skills')">去后台维护方法</n-button>
         </template>
         <div class="skill-grid">
           <article
@@ -300,12 +292,12 @@ watch(tab, (value) => {
             {{ selected.status === 'disabled' ? '修复依赖' : '编辑方法' }}
           </n-button>
           <n-button
-            v-if="!management"
+            v-if="isAdmin && (!management)"
             @click="router.push({ path: '/admin/skills', query: { selected: selected.id } })"
           >
             维护此方法
           </n-button>
-          <n-button
+          <n-button v-if="isAdmin"
             @click="
               run(() =>
                 download(`/export?kind=skill&id=${selected!.id}&format=markdown`, 'SKILL.md'),
@@ -341,19 +333,10 @@ watch(tab, (value) => {
           :autosize="{ minRows: 2, maxRows: 5 }"
         />
       </n-form-item>
-      <n-form-item label="引导智能体（可选）">
-        <n-select
-          v-model:value="agentId"
-          clearable
-          :options="
-            agents
-              .filter((a) => !['disabled', 'draft', 'archived'].includes(a.status))
-              .map((a) => ({ label: a.title, value: a.id }))
-          "
-        />
-      </n-form-item>
     </n-form>
-    <p class="field-hint">新建独立实践记录，固定当前 Skill 版本。仅创建记录不调用模型。</p>
+    <HelpTip label="实践说明">
+      新建独立实践记录，固定当前 Skill 版本。仅创建记录不调用模型。
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="startOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="startRun">开始记录</n-button>
@@ -378,9 +361,7 @@ watch(tab, (value) => {
             {{ practice.data.step_index || 0 }} / {{ practiceSteps.length }} 步
           </span>
         </div>
-        <p v-if="practice.data.agent_snapshot" class="muted small">
-          引导智能体：{{ practice.data.agent_snapshot.title }} · v{{ practice.data.agent_version }}
-        </p>
+        <p v-if="practice.data.migration_notice" class="muted small">{{ practice.data.migration_notice }}</p>
         <p v-if="practice.data.skill_snapshot.data.completion_criteria" class="muted">
           完成标准：{{ practice.data.skill_snapshot.data.completion_criteria }}
         </p>
@@ -444,8 +425,12 @@ watch(tab, (value) => {
           来源或方法已失效，不能继续执行；既有记录保留。
         </n-alert>
         <section class="section-spaced">
-          <h3>实践复盘</h3>
-          <p class="field-hint">哪些方法有用，哪些前提不成立？无需把所有结果都归因于自己。</p>
+          <div class="heading-with-help">
+            <h3>实践复盘</h3>
+            <HelpTip label="实践复盘说明">
+              哪些方法有用，哪些前提不成立？无需把所有结果都归因于自己。
+            </HelpTip>
+          </div>
           <n-input
             v-model:value="reflection"
             type="textarea"

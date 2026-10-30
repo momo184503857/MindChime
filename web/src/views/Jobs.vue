@@ -27,7 +27,8 @@ const statuses = computed(() =>
   })),
 );
 const types: Record<string, string> = {
-  distill: '内容蒸馏',
+  distill: '知识蒸馏',
+  thought_distill: '女娲思想蒸馏',
   ocr: '扫描页识别',
   agent_generate: '生成智能体',
   chat: '对话回复',
@@ -67,6 +68,7 @@ function openRelated(j: Entity) {
     return;
   }
   if (input.conversation_id) void router.push('/chat/' + input.conversation_id);
+  else if (input.person_id) void router.push('/admin/thoughts');
   else if (input.source_id) void router.push(assetPath('source', input.source_id, 'admin'));
   else if (j.data.kind?.includes('agent')) void router.push('/admin/agents');
   else if (j.data.kind?.includes('skill')) void router.push('/admin/skills');
@@ -94,7 +96,7 @@ function openRelated(j: Entity) {
       placeholder="全部状态"
       style="width: 170px"
     />
-    <span class="muted small">刷新或关闭网页不会重复提交任务。</span>
+    <HelpTip label="任务恢复说明" text="刷新或关闭网页不会重复提交任务。" />
   </div>
   <ResourceState
     :loading="loading"
@@ -164,7 +166,10 @@ function openRelated(j: Entity) {
           </p>
           <n-alert v-if="job.data.error" type="error" style="margin-top: 12px">
             {{ textOf(job.data.error) }}
-            <p>成功部分已保留。请先确认模型配置和失败原因，再重试未完成项。</p>
+            <HelpTip
+              label="失败任务恢复说明"
+              text="成功部分已保留。请先确认模型配置和失败原因，再重试未完成项。"
+            />
           </n-alert>
         </section>
         <section class="section-spaced">

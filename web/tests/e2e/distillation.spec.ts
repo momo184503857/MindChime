@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 
@@ -26,7 +26,8 @@ test('six method choices submit a book and prompt without starting a paid call',
     await page.goto('/admin/library/' + sid);
     await page.getByRole('button', { name: '蒸馏所选章节', exact: true }).click();
     const modal = page.getByRole('dialog', { name: '确认本次蒸馏' });
-    await expect(modal.getByRole('radio')).toHaveCount(6);
+    await expect(modal.locator('.method-picker').getByRole('radio')).toHaveCount(6);
+    await expect(modal.getByRole('radio', { name: '知识蒸馏', exact: true })).toBeChecked();
     await expect(modal.getByRole('radio', { name: /仓颉/ })).toBeChecked();
     await modal.getByRole('radio', { name: /博览/ }).check();
     await modal
@@ -74,9 +75,11 @@ test('real distillation result shows extensions, evidence and export in both the
   await row.getByRole('button', { name: '查看结果', exact: true }).click();
   const modal = page.getByRole('dialog', { name: '蒸馏结果与证据' });
   await expect(modal.getByRole('heading', { name: '方法特色成果', exact: true })).toBeVisible();
+  await modal.getByRole('button', { name: '覆盖与质量说明', exact: true }).hover();
   await expect(
-    modal.getByText('外部书评与联网核验未执行。', { exact: false }).first(),
+    page.getByRole('tooltip').filter({ hasText: '外部书评与联网核验未执行。' }),
   ).toBeVisible();
+  await page.mouse.move(0, 0);
   await expect(modal.getByRole('button', { name: /核对原文/ }).first()).toBeVisible();
   const accessibility = await new AxeBuilder({ page })
     .include('.n-modal')

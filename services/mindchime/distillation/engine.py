@@ -125,6 +125,8 @@ def step_digest(ctx):
 async def run(ctx, job):
     payload = job["data"]["input"]
     method = get_method(payload.get("method_id", "basic"))
+    if method.distillation_type != "knowledge":
+        raise StepFailure("思想蒸馏不能使用知识处理器")
     manifest = payload.get("method_snapshot") or method.manifest()
     if manifest != method.manifest():
         raise StepFailure("此任务的方法版本与当前代码不一致，保留已有结果；请使用原版本恢复或新建任务。")
@@ -144,7 +146,7 @@ async def run(ctx, job):
             source["title"] + " · " + method.name,
             {
                 "schema_version": 1,
-                "source_id": source["id"],
+                "distillation_type": "knowledge", "source_id": source["id"],
                 "source_ids": [source["id"]],
                 "source_version": source["version"],
                 "chapter_ids": payload["chapter_ids"],
@@ -555,7 +557,7 @@ async def run(ctx, job):
         )
         return {
             "distillation_id": rid,
-            "source_id": source["id"],
+            "distillation_type": "knowledge", "source_id": source["id"],
             "coverage": coverage,
             "integration": integration,
             "partial": bool(failures),

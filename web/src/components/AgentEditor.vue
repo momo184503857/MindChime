@@ -16,6 +16,7 @@ const sources = ref<Entity[]>([]),
   cards = ref<Entity[]>([]),
   chapters = ref<Entity[]>([]),
   profiles = ref<Profile[]>([]);
+const cognitiveProfiles = ref<Entity[]>([]), cognitiveId = ref<string | null>(null), cognitiveVersion = ref<number | null>(null);
 const sourceDetails = ref<Record<string, any>>({});
 const sourceVersions = ref<Record<string, number>>({});
 const resultSelections = ref<Record<string, string>>({});
@@ -62,6 +63,8 @@ watch(
   async (show) => {
     if (!show) return;
     const a = props.agent;
+    cognitiveId.value = a?.data.cognitive_profile_id || null;
+    cognitiveVersion.value = a?.data.cognitive_profile_version || null;
     title.value = a?.title || '';
     purpose.value = a?.data.purpose || '';
     perspective.value = textOf(a?.data.perspective);
@@ -82,10 +85,11 @@ watch(
     style.value = a?.data.style || 'clear';
     step.value = 'knowledge';
     await run(async () => {
-      [sources.value, cards.value, profiles.value] = await Promise.all([
+      [sources.value, cards.value, profiles.value, cognitiveProfiles.value] = await Promise.all([
         get('/sources'),
         get('/cards'),
         get('/profiles'),
+        get<Entity[]>('/cognitive-profiles').then(items => items.filter(p => p.status === 'active')),
       ]);
       await loadChapters();
     });
@@ -165,8 +169,8 @@ async function changeSources(ids: string[]) {
   await run(loadChapters);
 }
 async function save(status = 'draft') {
-  if (!sourceIds.value.length && !cardIds.value.length) {
-    message.warning('至少绑定一份资料或一张知识卡');
+  if (!sourceIds.value.length && !cardIds.value.length && !cognitiveId.value) {
+    message.warning('至少绑定知识资产或一个已审核的思想版本');
     return;
   }
   if (!purpose.value.trim()) {
@@ -178,6 +182,8 @@ async function save(status = 'draft') {
       if (props.generate) {
         const job = await post('/agents/generate', {
           ...resultBinding(),
+          cognitive_profile_id: cognitiveId.value,
+          cognitive_profile_version: cognitiveVersion.value || undefined,
           source_ids: sourceIds.value,
           source_versions: sourceVersions.value,
           chapter_ids: chapterIds.value,
@@ -192,6 +198,8 @@ async function save(status = 'draft') {
         if (!title.value.trim()) throw new Error('请填写智能体名称');
         const data = {
           ...resultBinding(),
+          cognitive_profile_id: cognitiveId.value,
+          cognitive_profile_version: cognitiveVersion.value || undefined,
           source_ids: sourceIds.value,
           source_versions: sourceVersions.value,
           chapter_ids: chapterIds.value,
@@ -231,8 +239,11 @@ async function save(status = 'draft') {
     style="width: 820px"
   >
     <n-tabs v-model:value="step" type="line">
-      <n-tab-pane name="knowledge" tab="1 · 选择知识">
+      <n-tab-pane name="knowledge" tab="1 · 知识与思想">
         <n-form>
+          <n-form-item label="思想画像（可选）">
+            <n-select v-model:value="cognitiveId" clearable :options="cognitiveProfiles.map(p=>({label:p.title+' · v'+p.version,value:p.id}))" placeholder="不绑定思想时为知识型；不绑定知识时为思想型" @update:value="cognitiveVersion = cognitiveProfiles.find(p=>p.id===cognitiveId)?.version || null" />
+          </n-form-item>
           <n-form-item label="绑定资料">
             <n-select
               :value="sourceIds"
@@ -308,11 +319,11 @@ async function save(status = 'draft') {
             />
           </n-form-item>
         </n-form>
-        <n-alert type="info" :show-icon="false">
+        <HelpTip label="智能体设置说明">
           当前范围内有
           {{ unreviewed }}
           张卡片尚未由你核对。智能体可检索绑定知识与所选范围原文，但不会读取其他私人资料。
-        </n-alert>
+        </HelpTip>
       </n-tab-pane>
       <n-tab-pane name="purpose" tab="2 · 用途与框架">
         <n-form>
@@ -332,9 +343,9 @@ async function save(status = 'draft') {
             <n-form-item label="生成草稿数量">
               <n-input-number v-model:value="count" :min="1" :max="3" />
             </n-form-item>
-            <p class="field-hint">
+            <HelpTip label="智能体设置说明">
               多个草稿会展示不同视角；生成后需检查知识范围、框架与边界，再发布为可用智能体。
-            </p>
+            </HelpTip>
           </div>
           <template v-else>
             <n-form-item label="分析视角">
@@ -400,19 +411,19 @@ async function save(status = 'draft') {
             </n-form-item>
             <n-form-item label="允许一般知识补充">
               <n-switch v-model:value="general" />
-              <span class="field-hint" style="margin: 0 0 0 12px">
+              <HelpTip label="一般知识补充说明">
                 {{
                   general
                     ? '允许补充，并明确标记为非绑定来源'
                     : '仅依据绑定知识，资料不足时说明不知道'
                 }}
-              </span>
+              </HelpTip>
             </n-form-item>
           </template>
         </n-form>
-        <n-alert type="warning" :show-icon="false">
+        <HelpTip label="智能体设置说明">
           相关内容会发送到你选择的模型服务。模型费用由服务商收取，试聊与正式对话都会产生真实调用。
-        </n-alert>
+        </HelpTip>
       </n-tab-pane>
     </n-tabs>
     <div class="modal-footer">

@@ -27,6 +27,8 @@ export const frontNav = [
 export const adminNav = [
   { path: '/admin', label: '管理概览', icon: LayoutDashboard },
   { path: '/admin/library', label: '资料与蒸馏', icon: BookOpen },
+  { path: '/admin/thoughts', label: '人物与思想蒸馏', icon: Brain },
+  { path: '/admin/publications', label: '发布管理', icon: NotebookPen },
   { path: '/admin/agents', label: '智能体管理', icon: Users },
   { path: '/admin/skills', label: 'Skill 管理', icon: ListChecks },
   { path: '/admin/graph', label: '关系审核', icon: Network },

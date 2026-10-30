@@ -6,25 +6,29 @@ defineEmits(['update:modelValue']);
 <template>
   <fieldset class="method-picker">
     <legend>蒸馏方法</legend>
-    <label
+    <div
       v-for="method in methods"
       :key="method.id"
       class="method-option"
       :class="{ chosen: modelValue === method.id }"
     >
-      <input
-        type="radio"
-        name="distillation-method"
-        :value="method.id"
-        :checked="modelValue === method.id"
-        @change="$emit('update:modelValue', method.id)"
-      />
-      <span>
+      <label class="method-choice">
+        <input
+          type="radio"
+          name="distillation-method"
+          :aria-label="method.name"
+          :value="method.id"
+          :checked="modelValue === method.id"
+          @change="$emit('update:modelValue', method.id)"
+        />
         <strong>{{ method.name }}</strong>
-        <small>{{ method.description }}</small>
-        <small>调用量：{{ method.cost }} · v{{ method.version }}</small>
-      </span>
-    </label>
+      </label>
+      <HelpTip :label="method.name + '方法说明'">
+        {{ method.description }}
+        <br />
+        调用量：{{ method.cost }} · v{{ method.version }}
+      </HelpTip>
+    </div>
   </fieldset>
 </template>
 <style scoped>
@@ -42,26 +46,27 @@ legend {
 }
 .method-option {
   display: flex;
-  gap: 12px;
-  padding: 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
   border: 1px solid var(--border);
-  cursor: pointer;
   border-radius: 8px;
+}
+.method-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
 }
 .method-option.chosen {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 .method-option input {
-  margin-top: 4px;
   flex-shrink: 0;
   accent-color: var(--accent);
-}
-.method-option small {
-  display: block;
-  margin-top: 8px;
-  color: var(--muted);
-  line-height: 1.6;
 }
 .method-option:focus-within {
   outline: 2px solid var(--accent);

@@ -489,6 +489,8 @@ def create_app(data_dir=None, service_token=None, transport=None, seed=True):
         store(request).acknowledge(request_id)
         return {"id": request_id, "status": "acknowledged", "purged": True}
 
+    from .research import install as install_research
+    install_research(application, dependencies)
     return application
 
 

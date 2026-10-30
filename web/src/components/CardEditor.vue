@@ -105,9 +105,9 @@ async function save() {
         />
       </n-form-item>
     </n-form>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="使用说明">
       修改会保留用户编辑标记。原引用仍可核对，但不代表修改后的全部表述均来自原书。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="emit('update:show', false)">取消</n-button>
       <n-button type="primary" :loading="busy" @click="save">保存版本</n-button>

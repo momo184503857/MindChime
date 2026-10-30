@@ -218,7 +218,7 @@ watch(
       <div v-else class="artifact-reader surface reader-empty">
         <NotebookPen :size="28" />
         <h3>选择一份成果继续阅读</h3>
-        <p>你的理解和修改，与原始来源一起保留。</p>
+        <HelpTip label="成果保存说明" text="你的理解和修改，与原始来源一起保留。" />
       </div>
     </div>
   </ResourceState>

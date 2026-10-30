@@ -149,9 +149,11 @@ onMounted(() => {
       {{ compare ? '退出比较' : '比较不同视角' }}
     </n-button>
   </div>
-  <n-alert v-if="compare" type="info" :show-icon="false" style="margin-bottom: 18px">
-    选择 2–3 个智能体，对照它们的知识、用途、框架和共同来源。
-  </n-alert>
+  <HelpTip
+    v-if="compare"
+    label="比较智能体说明"
+    text="选择 2–3 个智能体，对照它们的知识、用途、框架和共同来源。"
+  />
   <ResourceState
     :loading="loading"
     :error="error"
@@ -252,9 +254,9 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
-      <p class="subtle-note">
+      <HelpTip label="使用说明">
         相同来源表示共同证据，多个智能体同意一个观点不等于多个独立来源已验证该观点。
-      </p>
+      </HelpTip>
     </div>
   </ResourceState>
   <AgentEditor

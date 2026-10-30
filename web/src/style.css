@@ -726,3 +726,9 @@ a:focus-visible {
   background: var(--surface-subtle);
   border: 1px solid var(--border);
 }
+
+.heading-with-help {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}

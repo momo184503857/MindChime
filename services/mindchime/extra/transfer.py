@@ -25,6 +25,8 @@ from .common import context_text, markdown_record, require
 router = APIRouter()
 PORTABLE = {
     "source",
+    "person",
+    "cognitive_profile",
     "distillation",
     "chapter",
     "card",
@@ -59,6 +61,8 @@ PRIVATE_KEYS = {
     "client_secret",
     "private_key",
     "credentials",
+    "owner_user_id",
+    "legacy_agent_binding",
 }
 PRIVATE_NORMALIZED = {re.sub(r"[^a-z0-9]", "", key.lower()) for key in PRIVATE_KEYS}
 REFERENCE_FIELDS = {
@@ -75,6 +79,8 @@ REFERENCE_FIELDS = {
     "parent_id",
     "distillation_id",
     "active_distillation_id",
+    "person_id",
+    "cognitive_profile_id",
 }
 REFERENCE_LISTS = {
     "source_ids",
@@ -339,11 +345,24 @@ def managed_original(path):
 
 @router.get("/export")
 def export(kind: str = "workspace", id: str | None = None, format: str = "zip", originals: bool = False):
-    if kind not in {"workspace", "source", "agent", "conversation", "artifact", "skill", "distillation"}:
+    from ..access import is_admin, identity
+    if is_admin():
+        with identity(None):
+            return _export(kind,id,format,originals)
+    return _export(kind,id,format,originals)
+
+
+def _export(kind: str = "workspace", id: str | None = None, format: str = "zip", originals: bool = False):
+    if kind not in {"workspace", "source", "agent", "conversation", "artifact", "skill", "distillation", "person", "cognitive_profile", "run"}:
         raise HTTPException(422, "不支持的导出类型")
     if format not in {"zip", "markdown"}:
         raise HTTPException(422, "请选择 Markdown 或 ZIP")
+    from ..access import is_admin, PRIVATE_KINDS
+    if not is_admin() and (kind not in {"conversation","artifact","run"} or originals):
+        raise HTTPException(403,"普通用户仅可导出自己的对话、成果或实践记录")
     records = select_records(kind, id)
+    if not is_admin():
+        records = [r for r in records if r["kind"] in PRIVATE_KINDS]
     item = next((r for r in records if r["id"] == id), None)
     name = item["title"] if item else "MindChime 个人资产"
     if format == "markdown":
@@ -405,12 +424,18 @@ def export(kind: str = "workspace", id: str | None = None, format: str = "zip", 
             "records": clean(records, originals),
             "revisions": clean([rev for r in records for rev in db.revisions(r["id"])], originals),
             "originals": [],
+            "publications": [],
             "notes": [
                 "模型凭据和服务配置未导出；导入后请重新指定模型。",
                 "向量索引未导出，需确认模型后重新建立。",
             ],
             "missing_originals": [],
         }
+        from ..publications import all_publications
+        selected_ids={r["id"] for r in records}
+        if is_admin():
+            manifest["publications"] = clean([p for p in all_publications(history=True) if p["record_id"] in selected_ids], originals)
+            manifest["notes"].append("发布记录仅作核对，恢复后需要管理员重新检查并发布；个人内容归导入账号，原账号凭据不迁移。")
         output = io.BytesIO()
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
             for source in (r for r in records if r["kind"] == "source"):
@@ -510,6 +535,10 @@ def sanitize_restored(value):
     data = result.get("data")
     if not isinstance(kind, str) or kind not in PORTABLE or not isinstance(data, dict):
         return result
+    if kind in {"skill","run"}:
+        for key in ("agent_id","agent_version","agent_snapshot","legacy_agent_binding"):
+            data.pop(key,None)
+        data["migration_notice"] = "独立实践不再依赖人物智能体，历史步骤保留。"
     if kind == "source":
         data.update(original_missing=True, original_available=False, file_path=None)
     if kind in {"agent", "skill"}:
@@ -582,7 +611,7 @@ def restore(id: str, body: dict):
             if missing:
                 item["data"]["missing_dependency_ids"] = sorted(missing)
                 item["data"]["disabled_reason"] = "资产包缺少依赖，未连接到本实例的同名或同编号资料"
-                if item["kind"] in {"agent", "skill", "run", "relation", "memory", "card", "distillation"}:
+                if item["kind"] in {"agent", "skill", "run", "relation", "memory", "card", "distillation", "cognitive_profile"}:
                     item["status"] = "disabled"
             db.create(
                 item["kind"],

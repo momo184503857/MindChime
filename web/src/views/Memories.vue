@@ -138,19 +138,16 @@ watch(
     title="长期记忆"
     description="哪些背景值得带到下一次对话，由你决定。"
   >
+    <n-tag v-if="candidates" type="warning" :bordered="false">{{ candidates }} 条待确认</n-tag>
+    <HelpTip
+      label="记忆确认与共享说明"
+      text="候选记忆不会自动生效；确认后默认只供原智能体使用。只有你主动共享，其他智能体才能读取。"
+    />
     <n-button type="primary" @click="extractOpen = true">
       <Sparkles :size="15" />
       从对话提取候选
     </n-button>
   </PageHeader>
-  <div class="memory-policy surface">
-    <Brain :size="25" />
-    <div>
-      <h3>先提取，再确认。</h3>
-      <p>候选记忆不会自动生效；确认后默认只供原智能体使用。只有你主动共享，其他智能体才能读取。</p>
-    </div>
-    <n-tag v-if="candidates" type="warning" :bordered="false">{{ candidates }} 条待确认</n-tag>
-  </div>
   <div class="toolbar">
     <n-radio-group v-model:value="filter" size="small">
       <n-radio-button value="all">全部</n-radio-button>
@@ -267,9 +264,9 @@ watch(
         />
       </n-form-item>
     </n-form>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="记忆说明">
       保存编辑不会把待确认候选自动设为生效。共享仅影响这条记忆，不会开放其他资料。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="editOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="save">保存</n-button>
@@ -296,10 +293,10 @@ watch(
         />
       </n-form-item>
     </n-form>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="记忆说明">
       仅从用户明确说出的个人背景、偏好和目标提取，不根据书中内容或 AI
       回复推断你的事实。此操作会调用模型。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="extractOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="extract">提取候选</n-button>

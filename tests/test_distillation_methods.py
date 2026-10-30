@@ -136,7 +136,7 @@ class Model(Ctx):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("method", list(methods()))
+@pytest.mark.parametrize("method", [m.id for m in methods().values() if m.distillation_type == "knowledge"])
 async def test_methods_produce_isolated_results_and_validated_relations(client, method):
     imported = source(client)
     job = job_for(imported, method)
@@ -288,7 +288,7 @@ async def test_export_restore_remaps_result_bindings_and_delete_purges_results(c
 
 def test_api_catalog_validation_and_legacy_backfill(client, monkeypatch):
     catalog = client.get("/api/v1/distillation-methods").json()
-    assert catalog["default_method_id"] == "cangjie" and len(catalog["methods"]) == 6
+    assert catalog["default_method_id"] == "cangjie" and len(catalog["methods"]) == 7
     imported = source(client)
     sid = imported["source"]["id"]
     assert (

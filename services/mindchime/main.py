@@ -30,7 +30,11 @@ worker = Worker()
 
 @asynccontextmanager
 async def lifespan(app):
+    from .auth import initialize
+    initialize()
     register_handlers()
+    from .thought import register as register_thought
+    register_thought()
     from .enhancements import register_handlers as register_extra
     register_extra()
     from .distillation.store import migrate_legacy
@@ -54,9 +58,14 @@ async def lifespan(app):
         await worker.close()
 
 
-app = FastAPI(title="MindChime", version="0.1.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?", allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(title="MindChime", version="0.2.0", lifespan=lifespan)
+from .auth import install as install_auth, router as auth_router
+install_auth(app)
+app.include_router(auth_router, prefix="/api/v1")
+app.add_middleware(CORSMiddleware, allow_origins=[
+    f"{scheme}://{host}:{port}" for scheme in ("http", "https") for host in ("localhost", "127.0.0.1")
+    for port in {os.getenv("MINDCHIME_WEB_PORT", "5173"), os.getenv("MINDCHIME_API_PORT", "8765")}
+], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 @app.exception_handler(ValueError)
@@ -97,7 +106,7 @@ def config_record():
 
 
 async def proxy(method, path, body=None):
-    async with httpx.AsyncClient(base_url=AI_URL, headers=ai_headers(), timeout=45, trust_env=False) as client:
+    async with httpx.AsyncClient(base_url=AI_URL, headers=ai_headers(), timeout=90 if path.startswith("/research/") else 45, trust_env=False) as client:
         response = await client.request(method, "/ai/v1"+path, json=body)
     if response.status_code >= 400:
         try:
@@ -112,7 +121,8 @@ async def ensure_model(purpose, profile_id=None):
     config = settings()
     profile_id = profile_id or config.get("purpose_profiles", {}).get(purpose) or config.get("default_profile_id")
     if not profile_id:
-        raise HTTPException(409, f"请先在模型设置中配置 {purpose} 模型。")
+        from .access import is_admin
+        raise HTTPException(409, f"请先在模型设置中配置 {purpose} 模型。" if is_admin() else "服务模型尚未配置，请联系管理员")
     profiles = await proxy("GET", "/profiles")
     model = next((p for p in profiles if p["id"] == profile_id), None)
     if not model or not model.get("enabled", True) or not model.get("configured", True):
@@ -310,13 +320,15 @@ def source_file(source_id: str, version: int | None = None):
 
 
 def affected_source(source_id):
-    affected = {k: [] for k in ["card", "agent", "conversation", "message", "artifact", "skill", "run", "memory", "relation", "distillation", "job"]}
+    affected = {k: [] for k in ["card", "agent", "conversation", "message", "artifact", "skill", "run", "memory", "relation", "distillation", "cognitive_profile", "job"]}
     for kind in affected:
         affected[kind] = [r for r in db.list(kind) if source_id in source_ids(r["data"]) or any(x.get("source_id") == source_id for x in r["data"].get("references", []))]
+    profile_ids = {p["id"] for p in affected["cognitive_profile"]}
+    affected["agent"] = [a for a in db.list("agent") if source_id in source_ids(a["data"]) or a["data"].get("cognitive_profile_id") in profile_ids]
     agent_ids = {a["id"] for a in affected["agent"]}
     affected["conversation"] = [c for c in db.list("conversation") if set(c["data"].get("agent_ids", [])) & agent_ids]
     conv_ids = {c["id"] for c in affected["conversation"]}
-    affected["job"] = [j for j in db.list("job") if source_id in source_ids(j["data"].get("input", {})) or j["data"].get("input", {}).get("conversation_id") in conv_ids]
+    affected["job"] = [j for j in db.list("job") if source_id in (source_ids(j["data"].get("input", {})) | set(j["data"].get("resolved_source_ids", []))) or j["data"].get("input", {}).get("conversation_id") in conv_ids]
     card_ids = {c["id"] for c in affected["card"]}
     for kind in ("skill", "relation"):
         affected[kind] = [r for r in db.list(kind) if source_id in source_ids(r["data"]) or set(r["data"].get("card_ids", [])) & card_ids or r["data"].get("from_id") in card_ids or r["data"].get("to_id") in card_ids]
@@ -327,19 +339,22 @@ def affected_source(source_id):
 
 @router.get("/sources/{source_id}/impact")
 def source_impact(source_id: str):
+    from .access import require_admin, identity
+    require_admin()
     get(source_id, "source")
-    affected = affected_source(source_id)
+    with identity(None):
+        affected = affected_source(source_id)
     return {"counts": {k: len(v) for k, v in affected.items()}, "affected": affected,
             "notice": "删除派生知识会删除所有引用此资料的混合知识卡；其他原始资料不受影响。增强资产停用，历史摘录按所选范围处理。"}
 
 
 def replace_without_revisions(record, data, status=None):
-    db.purge(record["id"])
-    return db.create(record["kind"], record["title"], data, status=status or record["status"], parent_id=record.get("parent_id"), id=record["id"])
+    db.purge(record["id"], preserve_publications=True)
+    return db.create(record["kind"], record["title"], data, status=status or record["status"], parent_id=record.get("parent_id"), id=record["id"], owner_user_id=record.get("owner_user_id"))
 
 
 def assert_source_not_processing(source_id):
-    if any(j["status"] in ACTIVE and source_id in source_ids(j["data"].get("input", {})) for j in db.list("job")):
+    if any(j["status"] in ACTIVE and source_id in (source_ids(j["data"].get("input", {})) | set(j["data"].get("resolved_source_ids", []))) for j in db.list("job")):
         raise HTTPException(409, "资料有未结束的处理任务，请先结束任务再修改原文或章节结构。")
 
 
@@ -353,6 +368,13 @@ def purge_event_cache():
 
 @router.delete("/sources/{source_id}")
 async def delete_source(source_id: str, mode: str = "derived", history: str = "keep"):
+    from .access import require_admin, identity
+    require_admin()
+    with identity(None):
+        return await _delete_source(source_id, mode, history)
+
+
+async def _delete_source(source_id: str, mode: str = "derived", history: str = "keep"):
     source = get(source_id, "source")
     if mode not in {"file", "derived"} or history not in {"keep", "redact"}:
         raise ValueError("删除范围无效。")
@@ -371,6 +393,8 @@ async def delete_source(source_id: str, mode: str = "derived", history: str = "k
     if not cleanup_ok:
         db.update(source_id, data={"cleanup_pending": True, "cleanup_mode": mode, "cleanup_history": history})
         raise HTTPException(503, "独立 AI 服务副本清理尚未完成，资料已禁止继续使用。服务恢复后请重试删除。")
+    from .publications import clean_source_cache
+    clean_source_cache(source_id,mode=="derived")
     for version in db.revisions(source_id):
         path = version["data"].get("file_path")
         if path:
@@ -392,7 +416,7 @@ async def delete_source(source_id: str, mode: str = "derived", history: str = "k
             db.purge(result["id"])
         for card in affected["card"]:
             db.purge(card["id"])
-        for kind in ("skill", "memory", "relation"):
+        for kind in ("skill", "memory", "relation", "cognitive_profile", "run"):
             for item in affected[kind]:
                 db.update(item["id"], status="disabled", data={"disabled_reason": "来源已删除", "missing_source_ids": [source_id]})
         for agent in affected["agent"]:
@@ -522,6 +546,8 @@ async def start_distill(source_id: str, body: dict):
     prompt = body.get("prompt", body.get("focus", ""))
     if not isinstance(prompt, str) or len(prompt) > 5000:
         raise ValueError("蒸馏提示词最多 5000 字。")
+    if method.distillation_type != "knowledge":
+        raise HTTPException(422,"女娲请从人物思想蒸馏入口发起")
     profile = await ensure_model("distill", body.get("model_profile_id"))
     profiles = await proxy("GET", "/profiles")
     pinned = {p["id"]: p["version"] for p in profiles}
@@ -707,9 +733,13 @@ def copy_agent(agent_id: str):
 
 @router.delete("/agents/{agent_id}")
 def delete_agent(agent_id: str):
+    from .access import require_admin, identity
+    require_admin()
     get(agent_id, "agent")
-    related = {c["id"] for c in db.list("conversation") if agent_id in c["data"].get("agent_ids", [])}
-    if any(j["status"] in ACTIVE and j["data"].get("input", {}).get("conversation_id") in related for j in db.list("job")):
+    with identity(None):
+        related = {c["id"] for c in db.list("conversation") if agent_id in c["data"].get("agent_ids", [])}
+        active = any(j["status"] in ACTIVE and j["data"].get("input", {}).get("conversation_id") in related for j in db.list("job"))
+    if active:
         raise HTTPException(409, "此成员关联未结束任务，请先结束任务。")
     return db.delete(agent_id)
 
@@ -735,7 +765,8 @@ def add_conversation(body: dict):
 
 @router.get("/conversations/{conversation_id}")
 def conversation_detail(conversation_id: str):
-    return {"conversation": get(conversation_id, "conversation"), "messages": conversation_messages(conversation_id),
+    conversation = get(conversation_id, "conversation")
+    return {"conversation": conversation, "messages": conversation_messages(conversation_id),
             "jobs": [j for j in db.list("job") if j["data"].get("input", {}).get("conversation_id") == conversation_id]}
 
 
@@ -916,9 +947,16 @@ def job_detail(job_id: str):
 @router.post("/jobs/{job_id}/{action}")
 async def control_job(job_id: str, action: str):
     job = get(job_id, "job")
+    from .access import is_admin, require_owner
+    if not is_admin():
+        require_owner(job)
+        if job["data"]["kind"] not in {"chat","discussion","summary","artifact_generate","memory_extract","skill_step"}:
+            raise HTTPException(403,"无权控制管理任务")
+    if job["data"].get("legacy_requires_restart") and action in {"resume","retry"}:
+        raise HTTPException(409,"此旧任务含人物绑定，请从实践页重新提交后续步骤")
     status = job["status"]
     if action == "pause":
-        if job["data"]["kind"] not in {"discussion", "distill"} or status not in {"queued", "running"}:
+        if job["data"]["kind"] not in {"discussion", "distill", "thought_distill"} or status not in {"queued", "running"}:
             raise ValueError("只有待运行或运行中的讨论、蒸馏可以暂停。")
         job = db.update(job_id, status="paused" if status == "queued" else "pause_requested", data={"stage": "当前模型调用完成后暂停"})
     elif action == "cancel":
@@ -958,12 +996,25 @@ async def control_job(job_id: str, action: str):
 async def events(request: Request, topic: str = "jobs", after: int = 0):
     if topic != "jobs" and not (topic.startswith("job:") or topic.startswith("conversation:")):
         raise ValueError("事件主题无效。")
+    if topic.startswith("job:"):
+        get(topic.split(":",1)[1], "job")
+    if topic.startswith("conversation:"):
+        get(topic.split(":",1)[1], "conversation")
+    actor = request.state.actor
+    from .access import identity
+    from .auth import actor_for_token, COOKIE
     async def stream():
         cursor = max(after, int(request.headers.get("last-event-id", "0") or 0))
         while not await request.is_disconnected():
-            items = db.events(topic, cursor)
+            if not actor_for_token(request.cookies.get(COOKIE)):
+                break
+            with identity(actor):
+                items = db.events(topic, cursor)
             for event in items:
                 cursor = event["id"]
+                with identity(actor):
+                    if topic == "jobs" and not db.get(event["data"].get("id", ""), "job"):
+                        continue
                 yield f"id: {cursor}\nevent: {event['event']}\ndata: {json.dumps(event['data'], ensure_ascii=False)}\n\n"
             if not items:
                 yield ": keepalive\n\n"
@@ -985,3 +1036,8 @@ app.include_router(extra_router, prefix="/api/v1")
 
 from .distillation.api import router as distillation_router
 app.include_router(distillation_router, prefix="/api/v1")
+
+from .publications import router as publication_router
+app.include_router(publication_router, prefix="/api/v1")
+from .thought import router as thought_router
+app.include_router(thought_router, prefix="/api/v1")

@@ -13,7 +13,6 @@ const { busy, run, message } = useAction();
 const confirm = useConfirm();
 const allCards = ref<Entity[]>([]);
 const cards = ref<Entity[]>([]),
-  agents = ref<Entity[]>([]),
   selected = ref<Entity | null>(null);
 const editOpen = ref(false),
   generateOpen = ref(false),
@@ -25,12 +24,11 @@ const title = ref(''),
   completionCriteria = ref('');
 const steps = ref<{ title: string; instruction: string; output: string }[]>([]),
   cardIds = ref<string[]>([]),
-  agentId = ref<string | null>(null),
   purpose = ref('');
 onMounted(
   () =>
     void run(async () => {
-      [allCards.value, agents.value] = await Promise.all([get('/cards'), get('/agents')]);
+      allCards.value = await get('/cards');
       cards.value = allCards.value.filter((c) => c.status !== 'disabled');
       if (route.query.distillation) {
         const result = await get<Entity & { cards: Entity[] }>(
@@ -64,7 +62,6 @@ function edit(skill: Entity | null) {
     JSON.stringify(skill?.data.steps || [{ title: '第一步', instruction: '', output: '' }]),
   );
   cardIds.value = [...(skill?.data.card_ids || [])];
-  agentId.value = skill?.data.agent_id || null;
   editOpen.value = true;
 }
 async function save() {
@@ -86,7 +83,6 @@ async function save() {
       steps: steps.value,
       card_ids: cardIds.value,
       source_ids: [...new Set(chosen.flatMap((c) => c.data.source_ids || []))],
-      agent_id: agentId.value,
     };
     if (selected.value)
       await patch('/skills/' + selected.value.id, { title: title.value, data, status: 'active' });
@@ -104,7 +100,6 @@ async function generate() {
     const job = await post('/skills/generate', {
       card_ids: cardIds.value,
       ...(distillationId.value ? { distillation_id: distillationId.value } : {}),
-      agent_id: agentId.value,
       purpose: purpose.value,
       request_id: requestId(),
     });
@@ -165,22 +160,11 @@ defineExpose({ edit, del });
           placeholder="希望这个方法帮助你完成什么？"
         />
       </n-form-item>
-      <n-form-item label="引导智能体（可选）">
-        <n-select
-          v-model:value="agentId"
-          clearable
-          :options="
-            agents
-              .filter((a) => !['draft', 'disabled', 'archived'].includes(a.status))
-              .map((a) => ({ label: a.title, value: a.id }))
-          "
-        />
-      </n-form-item>
     </n-form>
-    <n-alert type="info" :show-icon="false">
-      生成会调用你配置的模型，输出适用条件、所需输入、步骤产物和边界。Skill
+    <HelpTip label="Skill 生成说明">
+      生成会调用管理员配置的独立 Skill 模型，输出适用条件、所需输入、步骤产物和边界。Skill
       在产品内引导实践，不会控制电脑或自动执行外部操作。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button @click="generateOpen = false">取消</n-button>
       <n-button type="primary" :loading="busy" @click="generate">生成方法草稿</n-button>
@@ -195,13 +179,6 @@ defineExpose({ edit, del });
     <n-form>
       <div class="form-grid">
         <n-form-item label="名称"><n-input v-model:value="title" :maxlength="100" /></n-form-item>
-        <n-form-item label="引导智能体">
-          <n-select
-            v-model:value="agentId"
-            clearable
-            :options="agents.map((a) => ({ label: a.title, value: a.id }))"
-          />
-        </n-form-item>
       </div>
       <n-form-item label="方法知识卡">
         <n-select

@@ -16,6 +16,7 @@ import {
 import { get, post, patch, remove, download, upload } from '../lib/api';
 import { useAction, useConfirm } from '../lib/useData';
 import { type Profile, textOf, typeLabels } from '../lib/types';
+import ResearchConfig from '../components/ResearchConfig.vue';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 const props = defineProps<{ section: 'models' | 'general' | 'data' }>();
@@ -48,9 +49,12 @@ const model = ref({
 });
 const selectedDefault = ref<string | null>(null);
 const purposeLabels = [
-  { id: 'distill', label: '内容蒸馏' },
-  { id: 'agent', label: 'Agent / Skill 生成' },
-  { id: 'chat', label: '对话回复与实践引导' },
+  { id: 'distill', label: '知识蒸馏' },
+  { id: 'thought_distill', label: '女娲思想蒸馏' },
+  { id: 'skill_generate', label: '独立 Skill 生成' },
+  { id: 'skill_guidance', label: '独立实践引导' },
+  { id: 'agent', label: '智能体生成' },
+  { id: 'chat', label: '对话回复' },
   { id: 'summary', label: '讨论与成果总结' },
   { id: 'ocr', label: '扫描页 OCR' },
   { id: 'embedding', label: '在线向量检索' },
@@ -269,11 +273,16 @@ async function restore() {
   />
 
   <section v-if="section === 'models'">
+    <ResearchConfig />
     <ResourceState :loading="loading" :error="error" @retry="load">
       <div class="section-heading">
         <div>
-          <h2>独立模型配置</h2>
-          <p class="field-hint">不同任务和智能体可使用不同服务。更换配置不会悄悄改变已确认任务。</p>
+          <div class="heading-with-help">
+            <h2>独立模型配置</h2>
+            <HelpTip label="独立模型配置说明">
+              不同任务和智能体可使用不同服务。更换配置不会悄悄改变已确认任务。
+            </HelpTip>
+          </div>
         </div>
         <n-button type="primary" @click="newModel()">
           <Plus :size="15" />
@@ -281,24 +290,30 @@ async function restore() {
         </n-button>
       </div>
       <div v-if="!profiles.length" class="setup-models">
-        <button @click="newModel('deepseek')">
-          <Plug :size="24" />
-          <strong>DeepSeek 官方</strong>
-          <span>文本生成与图片理解</span>
-          <small>添加自己的 API 密钥</small>
-        </button>
-        <button @click="newModel('embedding')">
-          <SlidersHorizontal :size="24" />
-          <strong>在线检索模型</strong>
-          <span>百炼 text-embedding-v4</span>
-          <small>独立可替换的向量配置</small>
-        </button>
-        <button @click="newModel('ollama')">
-          <ShieldCheck :size="24" />
-          <strong>本机模型服务</strong>
-          <span>Ollama 原生接口</span>
-          <small>使用已运行的本机模型</small>
-        </button>
+        <div class="model-preset">
+          <button @click="newModel('deepseek')">
+            <Plug :size="24" />
+            <strong>DeepSeek 官方</strong>
+            <span>文本生成与图片理解</span>
+          </button>
+          <HelpTip label="模型预设说明" text="添加自己的 API 密钥" />
+        </div>
+        <div class="model-preset">
+          <button @click="newModel('embedding')">
+            <SlidersHorizontal :size="24" />
+            <strong>在线检索模型</strong>
+            <span>百炼 text-embedding-v4</span>
+          </button>
+          <HelpTip label="模型预设说明" text="独立可替换的向量配置" />
+        </div>
+        <div class="model-preset">
+          <button @click="newModel('ollama')">
+            <ShieldCheck :size="24" />
+            <strong>本机模型服务</strong>
+            <span>Ollama 原生接口</span>
+          </button>
+          <HelpTip label="模型预设说明" text="使用已运行的本机模型" />
+        </div>
       </div>
       <div class="profile-list">
         <article
@@ -359,15 +374,15 @@ async function restore() {
               }}
             </n-tag>
             <span class="muted small">v{{ p.version }}</span>
-            <span class="muted small">
+            <HelpTip :label="p.name + '配置说明'">
               {{
                 p.base_url.includes('127.0.0.1') || p.base_url.includes('localhost')
                   ? '本机地址'
                   : '内容将发送到外部服务'
               }}
-            </span>
+              <p v-if="p.configuration_notice">{{ p.configuration_notice }}</p>
+            </HelpTip>
           </div>
-          <p v-if="p.configuration_notice" class="field-hint">{{ p.configuration_notice }}</p>
           <p v-if="p.last_test_error" class="error-text">{{ p.last_test_error }}</p>
           <n-alert
             v-if="tested[p.id]"
@@ -385,10 +400,12 @@ async function restore() {
         </article>
       </div>
       <div class="surface panel-pad section-spaced">
-        <h2>默认模型与任务分配</h2>
-        <p class="field-hint">
-          除向量检索外，留空的用途会沿用默认模型。图片识别需选择支持图片输入的模型；向量检索必须配置对应能力。
-        </p>
+        <div class="heading-with-help">
+          <h2>默认模型与任务分配</h2>
+          <HelpTip label="默认模型与任务分配说明">
+            除向量检索外，留空的用途会沿用默认模型。图片识别需选择支持图片输入的模型；向量检索必须配置对应能力。
+          </HelpTip>
+        </div>
         <n-form label-placement="top">
           <n-form-item label="默认生成模型">
             <n-select
@@ -430,8 +447,16 @@ async function restore() {
   <section v-if="section === 'general'">
     <ResourceState :loading="loading" :error="error" @retry="load">
       <div class="surface panel-pad">
-        <h2>任务限制</h2>
-        <p class="field-hint">上限是操作前可见的保护，不会通过静默截断内容来绕过。</p>
+        <div class="heading-with-help">
+          <h2>任务限制</h2>
+          <HelpTip label="任务限制说明">
+            上限是操作前可见的保护，不会通过静默截断内容来绕过。
+            <br />
+            <br />
+            普通查看、编辑和导出不占 AI
+            任务名额。关掉网页后，已确认的有限任务继续执行；停止本地业务服务会尽力取消在途调用。
+          </HelpTip>
+        </div>
         <n-form class="settings-form">
           <n-form-item label="单文件大小上限（MB）">
             <n-input-number v-model:value="settings.max_file_mb" :min="1" :max="500" />
@@ -448,10 +473,7 @@ async function restore() {
             <n-input-number v-model:value="settings.max_concurrent_tasks" :min="1" :max="8" />
           </n-form-item>
         </n-form>
-        <n-alert type="info" :show-icon="false">
-          普通查看、编辑和导出不占 AI
-          任务名额。关掉网页后，已确认的有限任务继续执行；停止本地业务服务会尽力取消在途调用。
-        </n-alert>
+
         <n-button type="primary" :loading="busy" @click="saveSettings" style="margin-top: 20px">
           保存限制
         </n-button>
@@ -461,9 +483,9 @@ async function restore() {
           <h2>语义检索索引</h2>
           <n-button :loading="busy" @click="rebuildIndex">使用当前向量模型重建</n-button>
         </div>
-        <p class="field-hint">
+        <HelpTip label="语义检索索引说明">
           索引按模型配置版本与维度分开保存。更换模型后请显式重建，不会混用不同模型的向量。
-        </p>
+        </HelpTip>
         <div v-if="indexes?.indexes?.length" class="table-scroll">
           <table class="plain-table">
             <thead>
@@ -486,7 +508,10 @@ async function restore() {
             </tbody>
           </table>
         </div>
-        <p v-else class="muted small">尚无语义索引。完成资料导入并配置向量模型后可创建。</p>
+        <p v-else class="muted small">
+          暂无语义索引。
+          <HelpTip label="创建语义索引说明" text="完成资料导入并配置向量模型后可创建。" />
+        </p>
       </section>
     </ResourceState>
   </section>
@@ -494,25 +519,32 @@ async function restore() {
     <div class="grid-two">
       <section class="surface panel-pad">
         <Download :size="24" class="accent-icon" />
-        <h2 style="margin-top: 14px">导出工作区</h2>
-        <p class="field-hint">
-          带走书架、知识卡、智能体、会话、成果和增强资产。结构化包可用于另一份本地实例恢复。
-        </p>
+        <div class="heading-with-help">
+          <h2 style="margin-top: 14px">导出工作区</h2>
+          <HelpTip label="导出工作区说明">
+            带走书架、知识卡、智能体、会话、成果和增强资产。结构化包可用于另一份本地实例恢复。
+            <br />
+            <br />
+            默认不包含模型密钥、账号或付款信息。未选择原文件时，包内会说明缺失内容。
+          </HelpTip>
+        </div>
         <n-checkbox v-model:checked="includeOriginals">同时包含原始文件</n-checkbox>
-        <p class="subtle-note" style="margin: 16px 0">
-          默认不包含模型密钥、账号或付款信息。未选择原文件时，包内会说明缺失内容。
-        </p>
+
         <n-button type="primary" @click="exportData" :loading="busy">导出 ZIP 资产包</n-button>
       </section>
       <section class="surface panel-pad">
         <Upload :size="24" class="accent-icon" />
-        <h2 style="margin-top: 14px">恢复资产包</h2>
-        <p class="field-hint">先检查包内数量、同名或标识冲突与缺失依赖，再决定恢复方式。</p>
+        <div class="heading-with-help">
+          <h2 style="margin-top: 14px">恢复资产包</h2>
+          <HelpTip label="恢复资产包说明">
+            先检查包内数量、同名或标识冲突与缺失依赖，再决定恢复方式。
+            <br />
+            <br />
+            只接受 MindChime 结构化包。导入不会自动配置模型凭据，也不会静默覆盖现有数据。
+          </HelpTip>
+        </div>
         <input ref="restoreFile" type="file" accept=".zip" hidden @change="previewImport" />
         <n-button @click="restoreFile?.click()" :loading="busy">选择 ZIP 并预览</n-button>
-        <p class="subtle-note" style="margin-top: 16px">
-          只接受 MindChime 结构化包。导入不会自动配置模型凭据，也不会静默覆盖现有数据。
-        </p>
       </section>
     </div>
     <section class="surface panel-pad section-spaced" v-if="preview">
@@ -620,9 +652,9 @@ async function restore() {
         </n-form-item>
       </div>
     </n-form>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="模型与系统说明">
       能力声明仍需实际测试。平台不会自动改用其他服务，也不会把未配置的模型伪装成可用。
-    </n-alert>
+    </HelpTip>
     <div class="modal-footer">
       <n-button
         @click="
@@ -637,6 +669,19 @@ async function restore() {
   </n-modal>
 </template>
 <style scoped>
+.model-preset {
+  position: relative;
+}
+.model-preset > button {
+  width: 100%;
+  height: 100%;
+}
+.model-preset > :deep(.help-tip) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
 .setup-models {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

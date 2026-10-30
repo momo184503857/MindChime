@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-30",
+  "backend": {
+    "passed": 156,
+    "warnings": [
+      "现有 Starlette TestClient/httpx 弃用提示"
+    ]
+  },
+  "frontend": {
+    "production_build": "passed",
+    "browser_tests": 78,
+    "unexpected_failures": 0,
+    "browsers": [
+      "Chromium",
+      "Firefox",
+      "WebKit"
+    ],
+    "includes_new_pages_wcag_a_aa": true
+  },
+  "new_module_lint": "passed",
+  "git_diff_check": "passed",
+  "credential_scan": {
+    "text_files": 93,
+    "matches": 0
+  },
+  "migration": {
+    "pre_migration_backup": "/Users/momo/code/momo/MindChime/.runtime/backups/20261030-133053",
+    "backup_integrity": "ok",
+    "accounts_file": "/Users/momo/code/momo/MindChime/data/local-accounts.json",
+    "accounts_file_permissions": "0600",
+    "legacy_assets_auto_published": false
+  },
+  "real_model_validation": {
+    "fictional_original_sources": 2,
+    "model_calls": 25,
+    "completed_jobs": {
+      "knowledge": "completed",
+      "thought": "completed",
+      "independent_skill_generate": "completed",
+      "chat_knowledge": "completed",
+      "chat_thought": "completed",
+      "chat_combined": "completed",
+      "independent_guidance_after_agent_delete": "completed"
+    },
+    "answer_references": {
+      "knowledge": 4,
+      "thought": 5,
+      "combined": 3
+    },
+    "agent_deletion_does_not_block_skill": true,
+    "temporary_publications_withdrawn": true,
+    "controlled_qa_personal_records_cleaned": true
+  },
+  "research": {
+    "per_task_default": false,
+    "configured": false,
+    "live_tavily_validation": "not_run_missing_credentials",
+    "adapter_and_recovery_tests": "passed"
+  },
+  "delivery": {
+    "url": "http://127.0.0.1:5173/login",
+    "local_only": true,
+    "git_delivery": "See repository commit history; this report records pre-commit validation."
+  }
+}

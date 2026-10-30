@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../../lib/auth';
 import { orderSourceChapters } from '../../lib/sourceView';
 import { switchArea } from '../../lib/navigation';
 import { ref, computed, watch } from 'vue';
@@ -79,11 +80,15 @@ function show(ref: Reference) {
   <ResourceState :loading="loading" :error="error" @retry="reload()">
     <template #action><n-button @click="router.push('/library')">返回书架</n-button></template>
     <template v-if="source">
-      <PageHeader :title="source.title" :description="source.data.author || '作者未填写'">
-        <n-button @click="run(() => download(`/export?kind=source&id=${id}&format=markdown`))">
+      <PageHeader
+        description-is-metadata
+        :title="source.title"
+        :description="source.data.author || '作者未填写'"
+      >
+        <n-button v-if="isAdmin" @click="run(() => download(`/export?kind=source&id=${id}&format=markdown`))">
           导出
         </n-button>
-        <n-button @click="router.push(switchArea(route, 'admin'))">管理此资料</n-button>
+        <n-button v-if="isAdmin" @click="router.push(switchArea(route, 'admin'))">管理此资料</n-button>
       </PageHeader>
       <div class="surface panel-pad inline-actions">
         <StatusBadge :status="source.status" />
@@ -98,9 +103,13 @@ function show(ref: Reference) {
           查看原文件
         </a>
       </div>
-      <n-alert v-if="!source.data.active_distillation_id" type="info" class="section-spaced">
-        尚未设置当前蒸馏结果。可以阅读原文；在后台选择结果后，这里会展示对应批次知识。
-      </n-alert>
+      <div v-if="!source.data.active_distillation_id" class="inline-actions section-spaced">
+        <n-tag size="small">未设置当前结果</n-tag>
+        <HelpTip
+          label="当前蒸馏结果说明"
+          text="可以阅读原文；在后台选择当前结果后，这里会展示对应批次知识。"
+        />
+      </div>
       <n-tabs v-model:value="tab" type="line" class="source-tabs">
         <n-tab-pane name="chapters" tab="章节与原文">
           <div class="chapter-layout surface">
@@ -118,18 +127,24 @@ function show(ref: Reference) {
             <article class="chapter-reader" v-if="chapter">
               <p class="eyebrow">{{ locationLabel(chapter.data.locator) }}</p>
               <h2>{{ chapter.title }}</h2>
-              <n-alert v-if="chapter.data.ocr" type="info">
-                此段来自 OCR，请对照原文件核对。
-              </n-alert>
+              <div v-if="chapter.data.ocr" class="inline-actions">
+                <n-tag size="small">OCR</n-tag>
+                <HelpTip label="OCR 内容说明" text="此段来自 OCR，请对照原文件核对。" />
+              </div>
               <p class="source-text" v-if="chapter.data.text">{{ chapter.data.text }}</p>
-              <p class="muted" v-else>这一页尚无可读文字，可前往后台识别并核对。</p>
+              <p class="muted" v-else>
+                暂无可读文字。
+                <HelpTip label="扫描页识别说明" text="可前往后台识别并核对。" />
+              </p>
             </article>
             <p v-else class="panel-pad muted">暂无可读章节。</p>
           </div>
         </n-tab-pane>
         <n-tab-pane name="cards" :tab="`知识卡 (${data.readingCards.length})`">
-          <p class="field-hint">仅展示当前结果及独立用户补充。其他批次请在“蒸馏结果”中查看。</p>
           <div class="toolbar">
+            <HelpTip label="知识卡批次说明">
+              仅展示当前结果及独立用户补充。其他批次请在“蒸馏结果”中查看。
+            </HelpTip>
             <n-select
               v-model:value="cardType"
               clearable

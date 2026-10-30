@@ -50,3 +50,19 @@ Service token `MINDCHIME_AI_TOKEN` in `X-Service-Token`; `/health` open. Storage
 - `POST /skills/generate` 可带 `distillation_id`，校验卡片属于该完整结果，保存来源依赖；`POST /distillations/{id}/skills` 支持用户明确编写步骤并保存为 Skill。
 - `/export` 支持 `kind=distillation`，Markdown/ZIP；结果和选择映射进入依赖闭包及恢复 ID 重映射。未知方法只作为数据阅读，包中无执行入口。
 - 蒸馏任务支持 pause/resume/retry/cancel。pause 在当前模型调用完成后的检查点生效。
+
+## 本地账号、发布与双蒸馏（2026-10-30）
+
+以下业务接口均在 `/api/v1` 下。`POST /auth/login {username,password}` 返回账号并设置 HttpOnly Session Cookie；`GET /auth/me`、`POST /auth/logout` 获取或撤销登录。业务匿名请求 401，普通账号调用管理能力 403；普通账号不能覆盖模型、身份或一般知识策略。健康检查保持公开。
+
+- 管理：`GET/POST /persons`，`PATCH/DELETE /persons/{id}`；`GET /cognitive-profiles?person_id=`，`GET /cognitive-profiles/{id}?version=`，`PATCH /cognitive-profiles/{id} {rules:[{id,review_status,review_note}],status?}`。读取受发布权限控制，写入仅管理员。
+- 统一提交：`POST /distillations {distillation_type,method_id,source_ids,chapter_ids?,person_id?,allow_network:false,prompt?,model_profile_id?,request_id?}`。知识类型要求单份资料、禁止联网；思想类型要求人物、女娲方法，在无本地资料时需明确开启且已配置联网。旧 `POST /sources/{id}/distill` 仍是知识入口。
+- 结果：`GET /distillations?source_id=&distillation_type=`；`source_id` 阅读页默认只列知识结果。思想结果包含画像 ID、来源版本、阶段报告、审核与问题集测试，不包含知识卡。`POST /distillations/{id}/continue-local` 明确跳过部分联网失败。
+- 发布：`GET /publications`、`GET /publications/{id}/versions`、`GET /publications/{id}/version-detail?version=`、`GET /publications/{id}/preview?version=`、`POST /publications/{id}?version=`、`DELETE /publications/{id}`，全部仅管理员。预检返回 `ready/dependencies/blockers`；发布依赖不满足返回 409。知识卡历史版本审核用 `POST /reviews/{id} {version,decision,note?}`，不会改写该内容版本。
+- 搜索配置：`GET/PATCH /research/config` 仅管理员，读取只返回 provider、configured、enabled、version。凭据与 `/ai/v1/research/{search|extract}` 均由服务令牌保护的独立 AI 服务管理。业务提交固定配置版本、请求编号与采集限制，失败不自动重发。
+- 智能体增加 `agent_type`、`cognitive_profile_id`、`cognitive_profile_version`，至少绑定知识或思想之一。会话继续固定智能体版本；人物回答须区分来源支持与模拟分析。
+- Skill 和实践的新请求拒绝 `agent_id`，使用 `skill_generate` / `skill_guidance` 用途；实践快照不加载人物配置。旧绑定只保留为历史记录，不再参与运行。
+
+个人记录 envelope 增加 `owner_user_id`。数据库统一投影发布版本、限制私人记录，Worker 使用任务持久化账号身份。搜索不以未发布正文命中旧发布版本；版本读取只开放确实发布过的快照。全局事件流过滤任务归属，指定事件主题先校验访问权并随 Session 过期终止。
+
+资产包兼容原格式，新增人物、思想画像、发布记录；恢复后不自动公开。普通用户仅能导出自己的 conversation/artifact/run，不能导出全局工作区或原始文件。

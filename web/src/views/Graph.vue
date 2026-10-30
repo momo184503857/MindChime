@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../lib/auth';
 import { switchArea } from '../lib/navigation';
 import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
@@ -226,7 +227,7 @@ watch(
         router.replace({ query: { ...route.query, selected: undefined } });
       "
     />
-    <n-button @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
+    <n-button v-if="isAdmin" @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
       {{ management ? '前台查看' : '管理关系' }}
     </n-button>
   </PageHeader>
@@ -279,7 +280,7 @@ watch(
             <i class="boundary" />
             边界
           </span>
-          <span class="muted">虚线：待核对 · 灰色：不可用</span>
+          <HelpTip label="图谱状态说明" text="虚线表示待核对关系，灰色表示不可用资产。" />
         </div>
         <n-button size="small" @click="cy?.fit(undefined, 55)">
           <Expand :size="13" />
@@ -292,7 +293,9 @@ watch(
         role="img"
         aria-label="知识关系图。可切换列表视图使用键盘浏览。"
       />
-      <p class="graph-hint">点击节点或关系查看详情；滚轮缩放，拖动移动。相似名称不会自动合并。</p>
+      <HelpTip label="使用说明">
+        点击节点或关系查看详情；滚轮缩放，拖动移动。相似名称不会自动合并。
+      </HelpTip>
     </div>
     <div v-else class="surface table-scroll">
       <table class="plain-table">
@@ -359,7 +362,7 @@ watch(
           <h3 style="margin-top: 28px">关系依据</h3>
           <MarkdownText :text="textOf(selected.data.evidence)" style="margin-top: 12px" />
           <n-button
-            v-if="!management"
+            v-if="isAdmin && (!management)"
             class="section-spaced"
             @click="router.push({ path: '/admin/graph', query: route.query })"
           >

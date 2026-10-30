@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-vue-next';
+import { auth, isAdmin, signOut } from '../lib/auth';
 import { useAppStore } from '../stores/app';
 import { get } from '../lib/api';
 import { type Entity, typeLabels } from '../lib/types';
@@ -125,6 +126,7 @@ const pageTitle = computed(() => route.meta.title || '工作台');
       </nav>
       <div class="sidebar-bottom">
         <RouterLink
+          v-if="isAdmin"
           :to="switchArea(route, opposite)"
           class="nav-item area-switch"
           :aria-label="area === 'admin' ? '返回前台' : '进入后台'"
@@ -134,8 +136,8 @@ const pageTitle = computed(() => route.meta.title || '工作台');
         </RouterLink>
         <div class="instance" v-if="!compact">
           <span class="status-dot" :class="{ offline: online === false }" />
-          {{ online === null ? '正在连接' : online ? '本地个人工作区' : '本地服务未连接' }}
-          <span class="version">v0.1</span>
+          {{ online === null ? '正在连接' : online ? '本地知识工作区' : '本地服务未连接' }}
+          <span class="version">v0.2</span>
         </div>
       </div>
     </aside>
@@ -158,6 +160,8 @@ const pageTitle = computed(() => route.meta.title || '工作台');
           <span class="local-badge">本地版</span>
         </div>
         <div class="topbar-right">
+          <span class="muted small">{{ auth.user?.username }} · {{ isAdmin ? '管理员' : '普通用户' }}</span>
+          <n-button text @click="signOut().then(() => router.replace('/login'))">退出登录</n-button>
           <button class="search-trigger" @click="searchOpen = true">
             <Search :size="15" />
             <span>搜索你的知识</span>

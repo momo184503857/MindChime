@@ -320,6 +320,13 @@ async def purge_ai_requests(job: dict) -> bool:
     ok = True
     async with httpx.AsyncClient(base_url=AI_URL, headers=ai_headers(), timeout=10, trust_env=False) as client:
         request_ids = {rid for step in job["data"].get("steps", {}).values() for rid in step.get("request_ids", []) + ([step["request_id"]] if step.get("request_id") else [])}
+        for research_id in job["data"].get("research_request_ids", []):
+            try:
+                response = await client.delete(f"/ai/v1/research/requests/{research_id}")
+                if response.status_code not in {200, 204, 404}:
+                    ok = False
+            except httpx.HTTPError:
+                ok = False
         for request_id in request_ids:
             if request_id:
                 try:

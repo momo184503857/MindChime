@@ -45,6 +45,7 @@ import App from './App.vue';
 import AccessibleFormItem from './components/AccessibleFormItem.vue';
 import AccessibleTabs from './components/AccessibleTabs.vue';
 import AccessibleModal from './components/AccessibleModal.vue';
+import HelpTip from './components/HelpTip.vue';
 import { router } from './router';
 import './style.css';
 const naive = create({
@@ -96,4 +97,5 @@ createApp(App)
   .component('NFormItem', AccessibleFormItem)
   .component('NTabs', AccessibleTabs)
   .component('NModal', AccessibleModal)
+  .component('HelpTip', HelpTip)
   .mount('#app');

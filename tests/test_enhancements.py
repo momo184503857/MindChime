@@ -133,11 +133,14 @@ def test_markdown_exports_preserve_usable_assets(client):
     assert all(term in text for term in ['尚未完成的内容','旧名称','incomplete','真实分歧'])
 
 
-def test_practice_pins_guide_version(client):
+def test_practice_is_independent_of_agent_changes_and_deletion(client):
     source, _, card, agent = assets()
-    db.update(agent['id'],data={'framework':'原思考框架'})
-    skill=client.post('/api/v1/skills',json={'title':'方法','data':{'card_ids':[card['id']],'agent_id':agent['id'],'steps':[{'title':'观察','instruction':'写观察','output':'记录'}]}}).json()
+    skill=client.post('/api/v1/skills',json={'title':'方法','data':{'card_ids':[card['id']],'steps':[{'title':'观察','instruction':'写观察','output':'记录'}]}}).json()
     run=client.post(f"/api/v1/skills/{skill['id']}/runs",json={}).json()
     db.update(agent['id'],data={'framework':'新思考框架'})
-    assert run['data']['agent_snapshot']['data']['framework']=='原思考框架'
-    assert run['data']['agent_version']==2
+    db.delete(agent['id'])
+    assert 'agent_snapshot' not in run['data']
+    assert 'agent_id' not in run['data']
+    advanced=client.post(f"/api/v1/runs/{run['id']}/advance",json={'answer':'已记录','use_ai':False})
+    assert advanced.status_code==200
+    assert advanced.json()['status']=='completed'

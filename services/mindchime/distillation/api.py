@@ -13,8 +13,8 @@ def list_methods():
 
 
 @router.get("/distillations")
-def list_results(source_id: str):
-    return db.list("distillation", parent_id=source_id)
+def list_results(source_id: str | None = None, distillation_type: str | None = None):
+    return [r for r in db.list("distillation") if (not source_id or source_id in r["data"].get("source_ids",[]) or r.get("parent_id")==source_id) and ((not distillation_type and (not source_id or r["data"].get("distillation_type","knowledge")=="knowledge")) or r["data"].get("distillation_type","knowledge")==distillation_type)]
 
 
 @router.get("/distillations/{id}")
@@ -24,6 +24,9 @@ def detail(id: str):
 
 @router.post("/distillations/{id}/activate")
 def activate_result(id: str):
+    item = db.get(id,"distillation")
+    if item and item["data"].get("distillation_type") == "thought":
+        raise ValueError("思想蒸馏请在思想资产页面审核并启用画像")
     return activate(id)
 
 

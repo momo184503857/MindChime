@@ -35,7 +35,7 @@ async function act(action: string) {
       <n-button
         v-if="
           ['running', 'processing'].includes(status) &&
-          ['discussion', 'distill'].includes(job.data.kind)
+          ['discussion', 'distill', 'thought_distill'].includes(job.data.kind)
         "
         size="small"
         :loading="busy"

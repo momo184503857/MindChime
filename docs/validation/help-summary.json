@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-30",
+  "scope": "contextual_help_for_front_and_admin",
+  "base_commit": "df16483",
+  "checks": {
+    "typecheck": "passed",
+    "production_build": "passed",
+    "diff_check": "passed",
+    "browser": {
+      "startTime": "2026-10-30T05:12:10.491Z",
+      "duration": 217762.27300000002,
+      "expected": 69,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "browsers": [
+    "chromium",
+    "firefox",
+    "webkit"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "help_scenarios": [
+    "hidden_until_requested",
+    "hover",
+    "hover_popup_content",
+    "keyboard_focus",
+    "click_toggle",
+    "outside_dismiss",
+    "escape_without_closing_modal",
+    "method_selection_unchanged",
+    "settings_unchanged",
+    "business_errors_visible"
+  ],
+  "new_paid_model_calls": false,
+  "screenshots": [
+    "help-models-compact.png",
+    "help-models-hover.png",
+    "help-models-dark.png"
+  ],
+  "guidelines": "../ui-help.md"
+}

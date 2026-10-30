@@ -15,6 +15,8 @@ class Worker:
         self.running = set()
 
     async def start(self):
+        from .auth import initialize
+        initialize()
         self.stop.clear()
         runtime = db.get("business-runtime")
         api_started = runtime["data"].get("started_at", "") if runtime else ""
@@ -58,6 +60,19 @@ class Worker:
             await asyncio.gather(*self.running, return_exceptions=True)
 
     async def execute(self, job):
+        from .access import identity
+        from .auth import connection
+        owner = job.get("owner_user_id") or "local-admin"
+        with connection() as conn:
+            row = conn.execute("SELECT id,username,role FROM local_users WHERE id=?", (owner,)).fetchone()
+        if not row:
+            emit_job(db.update(job["id"], status="waiting_error", data={"error":"任务所属账号不存在"}))
+            return
+        actor = dict(zip(("id","username","role"),row))
+        with identity(actor):
+            await self._execute_scoped(job)
+
+    async def _execute_scoped(self, job):
         ctx = Ctx(job, self.stop)
         emit_job(job)
         try:
@@ -104,6 +119,8 @@ async def main():
     from .enhancements import register_handlers as register_extra
     register_handlers()
     register_extra()
+    from .thought import register
+    register()
     worker = Worker(require_api=True)
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):

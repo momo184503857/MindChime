@@ -22,6 +22,7 @@ export async function api<T = any>(path: string, init: RequestInit = {}): Promis
   const data =
     response.status === 204 ? null : json ? await response.json() : await response.text();
   if (!response.ok) {
+    if (response.status === 401 && path !== '/auth/login' && path !== '/auth/me') window.dispatchEvent(new Event('mindchime:unauthorized'));
     const detail = data?.detail ?? data;
     const message =
       typeof detail === 'string'

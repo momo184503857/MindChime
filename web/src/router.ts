@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { auth, loadAuth } from './lib/auth';
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/login', name: 'login', component: () => import('./views/Login.vue'), meta: { title: '登录', public: true } },
     {
       path: '/',
       component: () => import('./layouts/WorkspaceLayout.vue'),
@@ -68,6 +70,8 @@ export const router = createRouter({
       component: () => import('./layouts/AdminLayout.vue'),
       meta: { area: 'admin' },
       children: [
+        { path: 'thoughts', name: 'admin-thoughts', component: () => import('./views/admin/Thoughts.vue'), meta: { title: '人物与思想蒸馏' } },
+        { path: 'publications', name: 'admin-publications', component: () => import('./views/admin/Publications.vue'), meta: { title: '发布管理' } },
         {
           path: '',
           name: 'admin-home',
@@ -146,6 +150,15 @@ export const router = createRouter({
   scrollBehavior(to, from, saved) {
     return saved || (to.path === from.path ? undefined : { top: 0 });
   },
+});
+router.beforeEach(async (to) => {
+  await loadAuth();
+  if (!to.meta.public && !auth.user) return { path: '/login', query: { next: to.fullPath } };
+  if (to.meta.area === 'admin' && auth.user?.role !== 'admin') return '/';
+});
+window.addEventListener('mindchime:unauthorized', () => {
+  auth.user = null; auth.loaded = true;
+  if (router.currentRoute.value.path !== '/login') void router.replace({ path: '/login', query: { next: router.currentRoute.value.fullPath } });
 });
 router.afterEach((to) => {
   document.title = `${to.meta.title || '工作台'} · ${to.meta.area === 'admin' ? '后台' : '前台'} · MindChime`;

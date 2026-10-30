@@ -72,6 +72,12 @@ def job_step(name, path, payload):
 
 
 def main():
+    from dotenv import dotenv_values
+    data_dir = Path(dotenv_values(ROOT / ".env.local").get("MINDCHIME_DATA_DIR") or ROOT / "data")
+    if not data_dir.is_absolute():
+        data_dir = ROOT / data_dir
+    account = next(a for a in json.loads((data_dir / "local-accounts.json").read_text()) if a["username"] == "admin")
+    request("POST", "/auth/login", json=account)
     profiles = request("GET", "/profiles")
     state["profiles"] = [{k: p.get(k) for k in ("id", "model", "configured", "version", "capabilities")} for p in profiles]
     for id in ("deepseek-default", "dashscope-embedding"):

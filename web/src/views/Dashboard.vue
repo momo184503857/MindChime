@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../lib/auth';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
@@ -41,7 +42,7 @@ const pendingRuns = computed(() =>
     title="把知识，带进下一次思考。"
     description="整理读过的内容，让不同的思想围绕你的真实问题展开对话。"
   >
-    <n-button type="primary" @click="router.push('/admin/library?import=1')">
+    <n-button v-if="isAdmin" type="primary" @click="router.push('/admin/library?import=1')">
       <template #icon><Plus :size="17" /></template>
       去后台导入资料
     </n-button>
@@ -61,8 +62,13 @@ const pendingRuns = computed(() =>
     <section class="journey-panel surface">
       <div>
         <div class="eyebrow">从资料到自己的判断</div>
-        <h2>每个想法，都有来处。</h2>
-        <p>从一本书开始，保留来源、比较观点，再把理解转化成可以实践的方法。</p>
+        <div class="heading-with-help">
+          <h2>每个想法，都有来处。</h2>
+          <HelpTip
+            label="工作台使用说明"
+            text="从一本书开始，保留来源、比较观点，再把理解转化成可以实践的方法。"
+          />
+        </div>
       </div>
       <div class="journey-steps">
         <RouterLink to="/library">
@@ -107,10 +113,15 @@ const pendingRuns = computed(() =>
         </div>
         <div class="small-empty surface" v-else>
           <BookOpen :size="25" />
-          <h3>给一个想法安放的位置</h3>
-          <p>导入自己的书籍，或载入两份原创演示资料，体验从知识到对话的过程。</p>
-          <n-button @click="router.push('/admin/library?import=1')">去后台导入资料</n-button>
-          <small>演示资料不是真实出版物，不包含预设模型回答。</small>
+          <div class="heading-with-help">
+            <h3>给一个想法安放的位置</h3>
+            <HelpTip
+              label="工作台使用说明"
+              text="导入自己的书籍，或载入两份原创演示资料，体验从知识到对话的过程。"
+            />
+          </div>
+          <n-button v-if="isAdmin" @click="router.push('/admin/library?import=1')">去后台导入资料</n-button>
+          <HelpTip label="原创演示资料说明" text="演示资料不是真实出版物，不包含预设模型回答。" />
         </div>
       </section>
       <section>
@@ -137,8 +148,13 @@ const pendingRuns = computed(() =>
         </div>
         <div class="small-empty surface" v-else>
           <MessagesSquare :size="25" />
-          <h3>一个好问题，是思考的起点</h3>
-          <p>创建智能体后，带上你的背景与问题，让不同知识和判断方式相互回应。</p>
+          <div class="heading-with-help">
+            <h3>一个好问题，是思考的起点</h3>
+            <HelpTip
+              label="工作台使用说明"
+              text="创建智能体后，带上你的背景与问题，让不同知识和判断方式相互回应。"
+            />
+          </div>
           <n-button @click="router.push('/agents')">选择思想智能体</n-button>
         </div>
       </section>
@@ -163,7 +179,7 @@ const pendingRuns = computed(() =>
             <StatusBadge :status="r.status" />
           </RouterLink>
         </div>
-        <p v-else class="surface panel-pad muted">还没有进行中的实践，可从方法库开始一次尝试。</p>
+        <p v-else class="surface panel-pad muted">暂无进行中的实践。</p>
       </section>
       <section>
         <div class="section-heading">
@@ -184,9 +200,7 @@ const pendingRuns = computed(() =>
             <ArrowUpRight :size="16" />
           </RouterLink>
         </div>
-        <p v-else class="surface panel-pad muted">
-          对话、实践中的收获，以及自己的笔记，都可以保存在成果中。
-        </p>
+        <p v-else class="surface panel-pad muted">暂无成果。</p>
       </section>
     </div>
   </ResourceState>

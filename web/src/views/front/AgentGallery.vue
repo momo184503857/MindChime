@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../../lib/auth';
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { get, post, download } from '../../lib/api';
@@ -73,7 +74,7 @@ async function chat(agent: Entity) {
 </script>
 <template>
   <PageHeader title="思想智能体" description="选择合适的知识与视角，围绕你的问题展开对话。">
-    <n-button @click="router.push('/admin/agents')">管理智能体</n-button>
+    <n-button v-if="isAdmin" @click="router.push('/admin/agents')">管理智能体</n-button>
   </PageHeader>
   <div class="toolbar">
     <n-input v-model:value="query" class="search-field" placeholder="搜索名称或用途" clearable />
@@ -84,11 +85,11 @@ async function chat(agent: Entity) {
     :error="error"
     :empty="!agents.length"
     title="还没有可用的思想智能体"
-    description="在后台从知识生成或手动组合，核对并启用后可在这里选择。"
+    description="管理员发布智能体后，你就可以在这里选择并开始对话。"
     @retry="reload()"
   >
     <template #action>
-      <n-button @click="router.push('/admin/agents')">去后台创建智能体</n-button>
+      <n-button v-if="isAdmin" @click="router.push('/admin/agents')">去后台创建智能体</n-button>
     </template>
     <div class="agent-gallery">
       <article v-for="agent in agents" :key="agent.id" class="surface panel-pad">
@@ -154,9 +155,9 @@ async function chat(agent: Entity) {
           </tr>
         </tbody>
       </table>
-      <p class="subtle-note">
+      <HelpTip label="使用说明">
         相同来源表示共同证据，多个智能体同意一个观点不等于多个独立来源已验证。
-      </p>
+      </HelpTip>
     </section>
   </ResourceState>
   <n-drawer
@@ -185,12 +186,12 @@ async function chat(agent: Entity) {
             >
               开始对话
             </n-button>
-            <n-button
+            <n-button v-if="isAdmin"
               @click="router.push({ path: '/admin/agents', query: { selected: detail.agent.id } })"
             >
               维护此智能体
             </n-button>
-            <n-button
+            <n-button v-if="isAdmin"
               @click="run(() => download(`/export?kind=agent&id=${detail.agent.id}&format=zip`))"
             >
               导出便携包

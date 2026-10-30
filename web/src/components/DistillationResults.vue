@@ -68,9 +68,9 @@ watch(
       <h2>蒸馏结果</h2>
       <n-button @click="reload()">刷新结果</n-button>
     </div>
-    <p class="muted result-notice">
+    <HelpTip label="蒸馏结果说明">
       每次独立保存。设为当前结果后，新建 Agent 默认使用这份知识；已有资产不受影响。
-    </p>
+    </HelpTip>
     <n-select
       v-model:value="filter"
       clearable

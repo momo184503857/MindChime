@@ -1,0 +1,2 @@
+from ..registry import Method, Stage
+METHOD = Method(id="nuwa",name="女娲",description="从人物多份可追溯资料提炼独立思想资产",cost="多阶段，依资料量而定",upstream="https://github.com/alchaincyf/nuwa-skill",upstream_version="7c7edfeb9d90a28b1f79e7847e1ba27a698cdc24",distillation_type="thought",stages=tuple(Stage(id=id,title=title,instruction=title) for id,title in [("materials","材料整理"),("dimensions","六维分析"),("candidates","候选规则"),("audit","验证与矛盾检查"),("profile","思想画像"),("tests","问题集测试")]))

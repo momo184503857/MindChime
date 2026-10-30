@@ -192,7 +192,9 @@ onMounted(() => {
             <span>{{ (file.size / 1024 / 1024).toFixed(2) }} MB</span>
           </div>
         </div>
-        <p class="field-hint">每个文件独立导入，失败不会影响其他文件。默认单文件上限 50 MB。</p>
+        <HelpTip label="把资料拖到这里说明">
+          每个文件独立导入，失败不会影响其他文件。默认单文件上限 50 MB。
+        </HelpTip>
       </n-tab-pane>
       <n-tab-pane name="text" tab="粘贴文本">
         <n-input
@@ -229,9 +231,9 @@ onMounted(() => {
         />
       </n-form-item>
     </div>
-    <n-alert type="info" :show-icon="false">
+    <HelpTip label="资料导入说明">
       基础解析在本地进行。OCR、蒸馏和后续 AI 分析会在你确认后发送到所选模型服务。
-    </n-alert>
+    </HelpTip>
     <div v-if="results.length" class="import-results" aria-live="polite">
       <div v-for="r in results" :key="r.name" :class="{ failed: !r.ok }">
         <strong>{{ r.name }}</strong>

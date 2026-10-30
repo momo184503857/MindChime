@@ -132,7 +132,8 @@ export function errorText(error: unknown) {
 }
 
 export const jobLabels: Record<string, string> = {
-  distill: '内容蒸馏',
+  distill: '知识蒸馏',
+  thought_distill: '女娲思想蒸馏',
   ocr: '扫描页识别',
   agent_generate: '生成智能体',
   chat: '对话回复',
@@ -162,6 +163,7 @@ export function locationLabel(locator: any): string {
 }
 
 export interface DistillationMethod {
+  distillation_type?: 'knowledge' | 'thought';
   id: string;
   name: string;
   description: string;

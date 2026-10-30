@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../lib/auth';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { type Entity, type Reference, textOf } from '../lib/types';
@@ -37,7 +38,7 @@ function generate(kind: 'agent' | 'skill') {
       }}
       · 结果 v{{ result.version }}
     </p>
-    <p>{{ result.data.method?.adaptation || '历史基础蒸馏结果' }}</p>
+    <HelpTip label="方法适配说明" :text="result.data.method?.adaptation || '历史基础蒸馏结果'" />
     <a
       v-if="result.data.method?.upstream"
       :href="result.data.method.upstream"
@@ -54,7 +55,7 @@ function generate(kind: 'agent' | 'skill') {
       </ol>
       <p>上游：{{ result.data.method.upstream_version }}</p>
     </details>
-    <div class="toolbar">
+    <div v-if="isAdmin" class="toolbar">
       <n-button
         :loading="busy"
         @click="run(() => download(`/export?kind=distillation&id=${result.id}&format=markdown`))"
@@ -85,13 +86,18 @@ function generate(kind: 'agent' | 'skill') {
     <p>{{ result.data.prompt || '未指定额外重点' }}</p>
     <h3>资料总览</h3>
     <MarkdownText :text="resolve(textOf(result.data.integration?.overview || '尚未生成'))" />
-    <h3>覆盖与质量</h3>
+    <div class="heading-with-help">
+      <h3>覆盖与质量</h3>
+      <HelpTip
+        label="覆盖与质量说明"
+        text="引用存在性与模型审核分开记录，仍需人工核对。外部书评与联网核验未执行。"
+      />
+    </div>
     <p>
       选择 {{ result.data.coverage?.selected?.length || 0 }} 章 · 完成
       {{ result.data.coverage?.completed?.length || 0 }} 章 · 候选卡
       {{ result.data.quality?.candidate_cards || 0 }} 张
     </p>
-    <p class="muted">引用存在性与模型审核分开记录，仍需人工核对。外部书评与联网核验未执行。</p>
     <ul>
       <li v-for="(failure, i) in result.data.coverage?.failures || []" :key="i">
         {{ failure.stage || '章节处理' }}：{{ failure.reason }}

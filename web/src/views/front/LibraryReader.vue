@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdmin } from '../../lib/auth';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { get } from '../../lib/api';
@@ -23,7 +24,7 @@ const filtered = computed(() =>
 </script>
 <template>
   <PageHeader title="我的书架" description="阅读原文、查阅知识与证据，把理解带入下一次思考。">
-    <n-button @click="router.push('/admin/library')">管理资料</n-button>
+    <n-button v-if="isAdmin" @click="router.push('/admin/library')">管理资料</n-button>
   </PageHeader>
   <div class="toolbar">
     <n-input v-model:value="query" class="search-field" placeholder="搜索标题或作者" clearable />
@@ -34,11 +35,11 @@ const filtered = computed(() =>
     :error="error"
     :empty="!filtered.length"
     title="从一份值得阅读的资料开始"
-    description="在后台导入书籍并完成蒸馏，然后回到这里阅读。"
+    :description="isAdmin ? '在后台导入书籍并审核发布，然后回到这里阅读。' : '暂时没有已发布资料，请等待管理员发布。'"
     @retry="reload()"
   >
     <template #action>
-      <n-button @click="router.push('/admin/library?import=1')">去后台导入资料</n-button>
+      <n-button v-if="isAdmin" @click="router.push('/admin/library?import=1')">去后台导入资料</n-button>
     </template>
     <LibraryShelf :sources="filtered" area="front" />
   </ResourceState>
