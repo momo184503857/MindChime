@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 async function loginUI(page: any, name: string) {
-  const account = accounts.find((a) => a.username === name)!;
+  const account = accounts.find((a) => a.role === name)!;
   await page.goto('/login');
   await page.getByRole('textbox', { name: '账号', exact: true }).fill(account.username);
   await page.getByRole('textbox', { name: '密码', exact: true }).fill(account.password);
@@ -81,7 +81,7 @@ test('administrator explicitly publishes dependencies and user practices without
   request,
 }) => {
   const admin = accounts.find((a) => a.username === 'admin')!,
-    user = accounts.find((a) => a.username === 'user')!;
+    user = accounts.find((a) => a.role === 'user')!;
   await request.post('/api/v1/auth/login', { data: admin });
   const imported = await (
     await request.post('/api/v1/sources/paste', {

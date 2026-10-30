@@ -19,7 +19,7 @@ def main():
         folder = ROOT / folder
     accounts = json.loads((folder / "local-accounts.json").read_text())
     admin = next(a for a in accounts if a["username"] == "admin")
-    user = next(a for a in accounts if a["username"] == "user")
+    user = next(a for a in accounts if a["role"] == "user")
     request("POST", "/auth/login", json=admin)
     result = request("GET", "/distillations/" + state["knowledge_result_id"])
     cards = result["cards"]

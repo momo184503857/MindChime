@@ -45,11 +45,13 @@ def initialize():
         conn.execute("CREATE TABLE IF NOT EXISTS app_migrations (id TEXT PRIMARY KEY)")
         credentials = []
         for username, role in [("admin", "admin"), ("user", "user")]:
-            if not conn.execute("SELECT 1 FROM local_users WHERE username=?", (username,)).fetchone():
+            # Login names may change; the stable identity owns history and tasks.
+            account_id = f"local-{role}"
+            if not conn.execute("SELECT 1 FROM local_users WHERE id=?", (account_id,)).fetchone():
                 password, salt = secrets.token_urlsafe(15), secrets.token_hex(16)
                 conn.execute(
                     "INSERT INTO local_users VALUES (?,?,?,?,?)",
-                    (f"local-{username}", username, role, salt, password_hash(password, salt)),
+                    (account_id, username, role, salt, password_hash(password, salt)),
                 )
                 credentials.append({"username": username, "password": password, "role": role})
         if not conn.execute("SELECT 1 FROM app_migrations WHERE id='accounts-v1'").fetchone():
