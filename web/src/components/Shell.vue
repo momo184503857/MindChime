@@ -3,15 +3,6 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   BookOpen,
-  LayoutDashboard,
-  Users,
-  MessagesSquare,
-  NotebookPen,
-  Network,
-  ListChecks,
-  Brain,
-  Activity,
-  Settings,
   Sun,
   Moon,
   Search,
@@ -23,23 +14,24 @@ import {
 import { useAppStore } from '../stores/app';
 import { get } from '../lib/api';
 import { type Entity, typeLabels } from '../lib/types';
+import { frontNav, adminNav, assetPath, switchArea, type Area } from '../lib/navigation';
+const props = defineProps<{ area: Area }>();
 const app = useAppStore();
 const route = useRoute();
 const router = useRouter();
-const compact = ref(false);
-const nav = [
-  { path: '/', label: '工作台', icon: LayoutDashboard },
-  { path: '/library', label: '我的书架', icon: BookOpen },
-  { path: '/agents', label: '思想智能体', icon: Users },
-  { path: '/chat', label: '对话空间', icon: MessagesSquare },
-  { path: '/artifacts', label: '我的成果', icon: NotebookPen },
-];
-const extras = [
-  { path: '/graph', label: '知识图谱', icon: Network },
-  { path: '/skills', label: '实践 Skills', icon: ListChecks },
-  { path: '/memories', label: '长期记忆', icon: Brain },
-];
-const active = (path: string) => (path === '/' ? route.path === '/' : route.path.startsWith(path));
+const compact = ref(localStorage.getItem(`mindchime.sidebar.${props.area}`) === 'compact');
+function toggleCompact() {
+  compact.value = !compact.value;
+  localStorage.setItem(`mindchime.sidebar.${props.area}`, compact.value ? 'compact' : 'expanded');
+}
+const nav = computed(() => (props.area === 'admin' ? adminNav : frontNav));
+const home = computed(() => (props.area === 'admin' ? '/admin' : '/'));
+const areaLabel = computed(() => (props.area === 'admin' ? '管理后台' : '知识前台'));
+const opposite = computed(() => (props.area === 'admin' ? 'front' : 'admin'));
+const active = (path: string) =>
+  path === '/' || path === '/admin'
+    ? route.path === path
+    : route.path === path || route.path.startsWith(path + '/');
 const searchOpen = ref(false);
 const query = ref('');
 const hits = ref<Entity[]>([]);
@@ -76,16 +68,18 @@ function search(value: string) {
   }, 250);
 }
 function openHit(item: Entity) {
-  const paths: Record<string, string> = {
-    source: `/library/${item.id}`,
-    card: `/library/${item.data.source_ids?.[0] || ''}`,
-    agent: '/agents',
-    conversation: `/chat/${item.id}`,
-    artifact: '/artifacts',
-    skill: '/skills',
-    memory: '/memories',
-  };
-  void router.push(paths[item.kind] || '/');
+  const id = item.kind === 'card' ? item.data.source_ids?.[0] : item.id;
+  const query: Record<string, string> = {};
+  if (['agent', 'skill', 'artifact', 'memory'].includes(item.kind)) query.selected = item.id;
+  if (item.kind === 'card') {
+    query.tab = 'cards';
+    query.card = item.id;
+    if (props.area === 'front' && item.data.distillation_id) {
+      query.tab = 'distillations';
+      query.result = item.data.distillation_id;
+    }
+  }
+  void router.push({ path: assetPath(item.kind, id, props.area), query });
   searchOpen.value = false;
 }
 function keys(e: KeyboardEvent) {
@@ -107,14 +101,14 @@ onUnmounted(() => {
 const pageTitle = computed(() => route.meta.title || '工作台');
 </script>
 <template>
-  <div class="app-shell" :class="{ 'sidebar-compact': compact }">
+  <div class="app-shell" :data-area="area" :class="{ 'sidebar-compact': compact }">
     <a href="#main-content" class="skip-link">跳到主要内容</a>
-    <aside class="sidebar" aria-label="主导航">
-      <RouterLink to="/" class="brand">
+    <aside class="sidebar" :aria-label="areaLabel + '导航'">
+      <RouterLink :to="home" class="brand">
         <span class="brand-mark"><BookOpen :size="22" :stroke-width="1.7" /></span>
         <span v-if="!compact">
           MindChime
-          <small>让知识参与思考</small>
+          <small>{{ areaLabel }}</small>
         </span>
       </RouterLink>
       <nav class="nav-main">
@@ -129,27 +123,14 @@ const pageTitle = computed(() => route.meta.title || '工作台');
           <span v-if="!compact">{{ item.label }}</span>
         </RouterLink>
       </nav>
-      <div class="nav-caption" v-if="!compact">连接与应用</div>
-      <nav>
-        <RouterLink
-          v-for="item in extras"
-          :key="item.path"
-          :to="item.path"
-          :class="['nav-item', { active: active(item.path) }]"
-          :aria-label="item.label"
-        >
-          <component :is="item.icon" :size="18" />
-          <span v-if="!compact">{{ item.label }}</span>
-        </RouterLink>
-      </nav>
       <div class="sidebar-bottom">
-        <RouterLink to="/jobs" :class="['nav-item', { active: active('/jobs') }]">
-          <Activity :size="18" />
-          <span v-if="!compact">任务中心</span>
-        </RouterLink>
-        <RouterLink to="/settings" :class="['nav-item', { active: active('/settings') }]">
-          <Settings :size="18" />
-          <span v-if="!compact">设置与模型</span>
+        <RouterLink
+          :to="switchArea(route, opposite)"
+          class="nav-item area-switch"
+          :aria-label="area === 'admin' ? '返回前台' : '进入后台'"
+        >
+          <ArrowUpRight :size="18" />
+          <span v-if="!compact">{{ area === 'admin' ? '返回前台' : '进入后台' }}</span>
         </RouterLink>
         <div class="instance" v-if="!compact">
           <span class="status-dot" :class="{ offline: online === false }" />
@@ -164,12 +145,16 @@ const pageTitle = computed(() => route.meta.title || '工作台');
           <button
             class="icon-button"
             :aria-label="compact ? '展开导航' : '收起导航'"
-            @click="compact = !compact"
+            @click="toggleCompact"
           >
             <PanelLeftOpen v-if="compact" :size="18" />
             <PanelLeftClose v-else :size="18" />
           </button>
-          <span class="topbar-title">{{ pageTitle }}</span>
+          <nav class="topbar-breadcrumb" aria-label="面包屑">
+            <RouterLink :to="home">{{ areaLabel }}</RouterLink>
+            <span aria-hidden="true">/</span>
+            <span class="topbar-title">{{ pageTitle }}</span>
+          </nav>
           <span class="local-badge">本地版</span>
         </div>
         <div class="topbar-right">
@@ -197,7 +182,7 @@ const pageTitle = computed(() => route.meta.title || '工作台');
         :class="{ 'chat-container': route.path.startsWith('/chat') }"
         tabindex="-1"
       >
-        <RouterView />
+        <RouterView :key="String(route.name)" />
       </main>
     </div>
   </div>

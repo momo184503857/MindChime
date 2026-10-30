@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Activity, RefreshCw, CheckCircle2, Clock, ArrowUpRight } from 'lucide-vue-next';
 import { get, events } from '../lib/api';
 import { useResource } from '../lib/useData';
 import { type Entity, textOf, dateText, stateLabels } from '../lib/types';
+import { assetPath } from '../lib/navigation';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
@@ -50,14 +51,27 @@ const steps = computed<Array<Record<string, any> & { key: string }>>(() =>
     ...(value as Record<string, any>),
   })),
 );
+watch(
+  () => route.query.selected,
+  (id) => {
+    selected.value = String(id || '') || null;
+  },
+);
+watch(selected, (id) => {
+  void router.replace({ query: { ...route.query, selected: id || undefined } });
+});
 function openRelated(j: Entity) {
   const input = j.data.input || {};
+  if (input.run_id) {
+    void router.push({ path: '/skills', query: { tab: 'runs', run: input.run_id } });
+    return;
+  }
   if (input.conversation_id) void router.push('/chat/' + input.conversation_id);
-  else if (input.source_id) void router.push('/library/' + input.source_id);
-  else if (j.data.kind?.includes('agent')) void router.push('/agents');
-  else if (j.data.kind?.includes('skill')) void router.push('/skills');
+  else if (input.source_id) void router.push(assetPath('source', input.source_id, 'admin'));
+  else if (j.data.kind?.includes('agent')) void router.push('/admin/agents');
+  else if (j.data.kind?.includes('skill')) void router.push('/admin/skills');
   else if (j.data.kind?.includes('memory')) void router.push('/memories');
-  else if (j.data.kind?.includes('graph')) void router.push('/graph');
+  else if (j.data.kind?.includes('graph')) void router.push('/admin/graph');
   else if (j.data.kind?.includes('artifact')) void router.push('/artifacts');
 }
 </script>

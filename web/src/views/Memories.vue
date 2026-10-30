@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { jobPath } from '../lib/navigation';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { Brain, Check, Trash2, Pause, Sparkles, Share2, Edit3 } from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { get, post, patch, remove } from '../lib/api';
 import { useResource, useAction, useConfirm } from '../lib/useData';
 import { type Entity, dateText, requestId } from '../lib/types';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
-const router = useRouter();
+const router = useRouter(),
+  route = useRoute();
 const {
   data: memories,
   loading,
@@ -113,9 +115,22 @@ async function extract() {
       request_id: requestId(),
     });
     extractOpen.value = false;
-    await router.push('/jobs?selected=' + job.id);
+    await router.push(jobPath(job.id));
   }, '候选提取任务已提交');
 }
+watch(
+  [memories, () => route.query.selected],
+  async () => {
+    if (!route.query.selected) return;
+    filter.value = 'all';
+    owner.value = null;
+    await nextTick();
+    document
+      .getElementById('memory-' + route.query.selected)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  },
+  { immediate: true },
+);
 </script>
 <template>
   <PageHeader
@@ -163,6 +178,8 @@ async function extract() {
     <div class="memory-grid">
       <article
         v-for="m in filtered"
+        :id="'memory-' + m.id"
+        :aria-current="route.query.selected === m.id ? 'true' : undefined"
         :key="m.id"
         class="memory-card surface"
         :class="{ 'disabled-asset': m.status === 'disabled' }"
@@ -290,6 +307,10 @@ async function extract() {
   </n-modal>
 </template>
 <style scoped>
+.memory-card[aria-current] {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .memory-policy {
   display: flex;
   gap: 18px;

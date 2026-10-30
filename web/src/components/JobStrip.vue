@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { jobPath } from '../lib/navigation';
 import { computed } from 'vue';
 import { type Entity, textOf, liveJobStates, jobLabels } from '../lib/types';
 import { post } from '../lib/api';
@@ -94,7 +95,7 @@ async function act(action: string) {
       >
         立即结束
       </n-button>
-      <RouterLink :to="'/jobs?selected=' + job.id" class="text-link">详情</RouterLink>
+      <RouterLink :to="jobPath(job.id)" class="text-link">详情</RouterLink>
     </div>
   </section>
 </template>

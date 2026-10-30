@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { type Entity, dateText } from '../lib/types';
 import { get, post } from '../lib/api';
 import { useResource, useAction } from '../lib/useData';
 import ResourceState from './ResourceState.vue';
 import DistillationReport from './DistillationReport.vue';
 import StatusBadge from './StatusBadge.vue';
-const props = defineProps<{ source: Entity }>();
+const props = defineProps<{ source: Entity; management?: boolean }>();
+const route = useRoute(),
+  router = useRouter();
 const emit = defineEmits(['changed', 'rerun']);
 const {
   data: results,
@@ -30,11 +33,14 @@ watch(
 );
 async function view(id: string) {
   selectedId.value = id;
+  void router.replace({ query: { ...route.query, tab: 'distillations', result: id } });
   open.value = true;
   detailLoading.value = true;
   detailError.value = '';
   try {
-    selected.value = await get('/distillations/' + id);
+    const result = await get<Entity & { cards?: Entity[] }>('/distillations/' + id);
+    if (result.data.source_id !== props.source.id) throw new Error('此结果不属于当前资料');
+    selected.value = result;
   } catch (e) {
     detailError.value = (e as Error).message;
   } finally {
@@ -48,6 +54,13 @@ async function activate(result: Entity) {
     await reload();
   }, '已设为当前结果，已有 Agent 与会话保持原绑定');
 }
+watch(
+  () => route.query.result,
+  (id) => {
+    if (id && id !== selectedId.value) void view(String(id));
+  },
+  { immediate: true },
+);
 </script>
 <template>
   <section class="surface panel-pad">
@@ -99,6 +112,7 @@ async function activate(result: Entity) {
         <div class="inline-actions">
           <n-button size="small" @click="view(result.id)">查看结果</n-button>
           <n-button
+            v-if="management"
             size="small"
             :loading="busy"
             :disabled="
@@ -108,7 +122,9 @@ async function activate(result: Entity) {
           >
             设为当前结果
           </n-button>
-          <n-button size="small" @click="emit('rerun', result)">再次运行</n-button>
+          <n-button v-if="management" size="small" @click="emit('rerun', result)">
+            再次运行
+          </n-button>
         </div>
       </div>
       <p v-if="filter && !results.some((r) => r.data.method_id === filter)" class="muted">
@@ -117,6 +133,14 @@ async function activate(result: Entity) {
     </ResourceState>
     <n-modal
       v-model:show="open"
+      @update:show="
+        (value: boolean) => {
+          if (!value) {
+            selectedId = '';
+            void router.replace({ query: { ...route.query, result: undefined } });
+          }
+        }
+      "
       preset="card"
       title="蒸馏结果与证据"
       style="width: 1000px; max-width: calc(100vw - 48px)"

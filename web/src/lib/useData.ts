@@ -6,19 +6,21 @@ export function useResource<T>(loader: () => Promise<T>, initial: T, poll = 0) {
   const loading = ref(true);
   const error = ref('');
   let alive = true;
+  let revision = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
   async function reload(quiet = false) {
+    const requestRevision = ++revision;
     if (!quiet) loading.value = true;
     try {
       const result = await loader();
-      if (alive) {
+      if (alive && requestRevision === revision) {
         data.value = result;
         error.value = '';
       }
     } catch (e) {
-      if (alive) error.value = errorText(e);
+      if (alive && requestRevision === revision) error.value = errorText(e);
     } finally {
-      if (alive) loading.value = false;
+      if (alive && requestRevision === revision) loading.value = false;
     }
   }
   onMounted(() => {

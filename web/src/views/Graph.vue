@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import { switchArea } from '../lib/navigation';
 import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { defineAsyncComponent } from 'vue';
+const RelationMaintenance = defineAsyncComponent(
+  () => import('../components/maintenance/RelationMaintenance.vue'),
+);
+const props = defineProps<{ management?: boolean }>();
+const maintenance = ref<InstanceType<typeof RelationMaintenance> | null>(null);
+const route = useRoute();
 import cytoscape from 'cytoscape';
-import { Network, List, Plus, Sparkles, Expand, Check, Link2, Quote } from 'lucide-vue-next';
-import { get, post, patch } from '../lib/api';
+import { Network, Expand, Check, Quote } from 'lucide-vue-next';
+import { get } from '../lib/api';
 import { useResource, useAction } from '../lib/useData';
-import { type Entity, type Reference, typeLabels, textOf, requestId } from '../lib/types';
+import { type Entity, type Reference, typeLabels, textOf } from '../lib/types';
 import { useAppStore } from '../stores/app';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
@@ -23,28 +31,16 @@ const {
   nodes: [],
   edges: [],
 });
-const { busy, run, message } = useAction();
+const { run } = useAction();
 const sources = ref<Entity[]>([]);
-const sourceId = ref<string | null>(null),
-  mode = ref('graph'),
+const sourceId = ref<string | null>(String(route.query.source_id || '') || null),
+  mode = ref(String(route.query.mode || 'graph')),
   kind = ref<string | null>(null),
   container = ref<HTMLElement | null>(null),
   selected = ref<Entity | null>(null),
-  detailOpen = ref(false),
-  generateOpen = ref(false),
-  generateSources = ref<string[]>([]),
-  editOpen = ref(false),
-  editing = ref<Entity | null>(null),
-  fromId = ref<string | null>(null),
-  toId = ref<string | null>(null),
-  relationType = ref('support'),
-  relationEvidence = ref('');
+  detailOpen = ref(false);
 const evidence = ref<Reference | null>(null),
   evidenceOpen = ref(false);
-const relationOptions = ['support', 'limit', 'refute', 'apply', 'similar'].map((v) => ({
-  label: typeLabels[v],
-  value: v,
-}));
 const filteredNodes = computed(() =>
   graph.value.nodes.filter(
     (n) =>
@@ -169,12 +165,10 @@ async function renderGraph() {
     wheelSensitivity: 0.15,
   });
   cy.on('tap', 'node', (event) => {
-    selected.value = graph.value.nodes.find((n) => n.id === event.target.id()) || null;
-    detailOpen.value = true;
+    void router.push({ query: { ...route.query, selected: event.target.id() } });
   });
   cy.on('tap', 'edge', (event) => {
-    selected.value = graph.value.edges.find((n) => n.id === event.target.id()) || null;
-    detailOpen.value = true;
+    void router.push({ query: { ...route.query, selected: event.target.id() } });
   });
   observer?.disconnect();
   observer = new ResizeObserver(() => cy?.resize());
@@ -191,89 +185,49 @@ onUnmounted(() => {
   cy?.destroy();
   observer?.disconnect();
 });
-function edit(edge: Entity | null) {
-  editing.value = edge;
-  fromId.value = edge?.data.from_id || null;
-  toId.value = edge?.data.to_id || null;
-  relationType.value = edge?.data.type || 'support';
-  relationEvidence.value = edge?.data.evidence || '';
-  editOpen.value = true;
-}
-async function save() {
-  if (!fromId.value || !toId.value || !relationEvidence.value.trim()) {
-    message.warning('请选择知识卡，并说明关系依据');
-    return;
-  }
-  await run(async () => {
-    const data = {
-      from_id: fromId.value,
-      to_id: toId.value,
-      type: relationType.value,
-      evidence: relationEvidence.value,
-      review_status: 'confirmed',
-    };
-    if (editing.value)
-      await patch('/graph/relations/' + editing.value.id, { data, status: 'active' });
-    else await post('/graph/relations', { title: typeLabels[relationType.value], data });
-    editOpen.value = false;
-    detailOpen.value = false;
-    await reload();
-  }, '关系已保存并标记为用户确认');
-}
-async function approve(edge: Entity) {
-  await run(async () => {
-    await patch('/graph/relations/' + edge.id, {
-      data: { review_status: 'confirmed' },
-      status: 'active',
-    });
-    await reload();
-    detailOpen.value = false;
-  }, '关系已确认');
-}
-async function disable(edge: Entity) {
-  await run(async () => {
-    await patch('/graph/relations/' + edge.id, {
-      status: 'disabled',
-      data: { review_status: 'rejected' },
-    });
-    await reload();
-    detailOpen.value = false;
-  }, '关系已停用并保留记录');
-}
-async function generate() {
-  if (!generateSources.value.length) {
-    message.warning('请选择资料范围');
-    return;
-  }
-  await run(async () => {
-    const job = await post('/graph/generate', {
-      source_ids: generateSources.value,
-      request_id: requestId(),
-    });
-    generateOpen.value = false;
-    await router.push('/jobs?selected=' + job.id);
-  }, '关系提取任务已提交');
-}
+watch([sourceId, mode], () => {
+  void router.replace({
+    query: { ...route.query, source_id: sourceId.value || undefined, mode: mode.value },
+  });
+});
+watch(
+  [graph, () => route.query.selected],
+  () => {
+    selected.value =
+      [...graph.value.nodes, ...graph.value.edges].find((e) => e.id === route.query.selected) ||
+      null;
+    detailOpen.value = !!selected.value;
+  },
+  { immediate: true },
+);
+watch(
+  () => route.query,
+  (query) => {
+    sourceId.value = String(query.source_id || '') || null;
+    mode.value = String(query.mode || 'graph');
+  },
+);
 </script>
 <template>
   <PageHeader
     eyebrow="CONNECTIONS WITH EVIDENCE"
-    title="知识图谱"
+    :title="management ? '关系审核' : '知识图谱'"
     description="看见概念之间的支持、限制与分歧。每一条关系，都应该有依据。"
   >
-    <n-button @click="edit(null)">
-      <Plus :size="15" />
-      添加关系
-    </n-button>
-    <n-button
-      type="primary"
-      @click="
-        generateSources = sourceId ? [sourceId] : [];
-        generateOpen = true;
+    <RelationMaintenance
+      v-if="management"
+      ref="maintenance"
+      :nodes="graph.nodes"
+      :sources="sources"
+      :source-id="sourceId"
+      @changed="
+        reload(true);
+        detailOpen = false;
+        router.replace({ query: { ...route.query, selected: undefined } });
       "
-    >
-      <Sparkles :size="15" />
-      提取关系候选
+    />
+    <n-button @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
+      {{ management ? '前台查看' : '管理关系' }}
     </n-button>
   </PageHeader>
   <div class="toolbar">
@@ -367,12 +321,9 @@ async function generate() {
               <n-button
                 text
                 size="small"
-                @click="
-                  selected = e;
-                  detailOpen = true;
-                "
+                @click="router.push({ query: { ...route.query, selected: e.id } })"
               >
-                核对
+                查看依据
               </n-button>
             </td>
           </tr>
@@ -383,69 +334,15 @@ async function generate() {
       </div>
     </div>
   </ResourceState>
-  <n-modal v-model:show="generateOpen" preset="card" title="提取关系候选" style="width: 620px">
-    <n-form-item label="明确选择分析范围">
-      <n-select
-        v-model:value="generateSources"
-        multiple
-        filterable
-        :options="sources.map((s) => ({ label: s.title, value: s.id }))"
-      />
-    </n-form-item>
-    <n-alert type="info" :show-icon="false">
-      选择多份资料可比较跨书关系。模型只提出候选，不自动合并同名概念，也不把相似视为同义。此操作会调用模型。
-    </n-alert>
-    <div class="modal-footer">
-      <n-button @click="generateOpen = false">取消</n-button>
-      <n-button type="primary" :loading="busy" @click="generate">生成候选</n-button>
-    </div>
-  </n-modal>
-  <n-modal
-    v-model:show="editOpen"
-    preset="card"
-    :title="editing ? '编辑与修复关系' : '添加知识关系'"
-    style="width: 650px"
+  <n-drawer
+    v-model:show="detailOpen"
+    @update:show="
+      (value: boolean) => {
+        if (!value) void router.replace({ query: { ...route.query, selected: undefined } });
+      }
+    "
+    :width="520"
   >
-    <n-form>
-      <n-form-item label="起点知识卡">
-        <n-select
-          v-model:value="fromId"
-          filterable
-          :options="
-            graph.nodes
-              .filter((n) => n.kind === 'card' && n.status !== 'disabled')
-              .map((n) => ({ label: n.title, value: n.id }))
-          "
-        />
-      </n-form-item>
-      <n-form-item label="关系类型">
-        <n-select v-model:value="relationType" :options="relationOptions" />
-      </n-form-item>
-      <n-form-item label="目标知识卡">
-        <n-select
-          v-model:value="toId"
-          filterable
-          :options="
-            graph.nodes
-              .filter((n) => n.kind === 'card' && n.status !== 'disabled' && n.id !== fromId)
-              .map((n) => ({ label: n.title, value: n.id }))
-          "
-        />
-      </n-form-item>
-      <n-form-item label="关系依据与前提">
-        <n-input
-          v-model:value="relationEvidence"
-          type="textarea"
-          :autosize="{ minRows: 4, maxRows: 10 }"
-        />
-      </n-form-item>
-    </n-form>
-    <div class="modal-footer">
-      <n-button @click="editOpen = false">取消</n-button>
-      <n-button type="primary" :loading="busy" @click="save">保存并确认</n-button>
-    </div>
-  </n-modal>
-  <n-drawer v-model:show="detailOpen" :width="520">
     <n-drawer-content
       :title="selected?.kind === 'relation' ? '关系与依据' : selected?.title"
       closable
@@ -461,19 +358,26 @@ async function generate() {
           <h2>{{ nodeName(selected.data.to_id) }}</h2>
           <h3 style="margin-top: 28px">关系依据</h3>
           <MarkdownText :text="textOf(selected.data.evidence)" style="margin-top: 12px" />
-          <div class="inline-actions section-spaced">
+          <n-button
+            v-if="!management"
+            class="section-spaced"
+            @click="router.push({ path: '/admin/graph', query: route.query })"
+          >
+            管理此关系
+          </n-button>
+          <div v-if="management" class="inline-actions section-spaced">
             <n-button
               type="primary"
               v-if="selected.status === 'candidate'"
-              @click="approve(selected)"
+              @click="maintenance?.approve(selected)"
             >
               <Check :size="13" />
               确认关系
             </n-button>
-            <n-button @click="edit(selected)">
+            <n-button @click="maintenance?.edit(selected)">
               {{ selected.status === 'disabled' ? '修复关系' : '编辑' }}
             </n-button>
-            <n-button v-if="selected.status !== 'disabled'" @click="disable(selected)">
+            <n-button v-if="selected.status !== 'disabled'" @click="maintenance?.disable(selected)">
               不采用，保留记录
             </n-button>
           </div>

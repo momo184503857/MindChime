@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   Users,
@@ -21,7 +21,8 @@ import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
 import AgentEditor from '../components/AgentEditor.vue';
-import MarkdownText from '../components/MarkdownText.vue';
+import { jobPath, switchArea } from '../lib/navigation';
+import AgentFacts from '../components/AgentFacts.vue';
 const route = useRoute(),
   router = useRouter();
 const {
@@ -32,7 +33,17 @@ const {
 } = useResource(() => get<Entity[]>('/agents'), [], 10000);
 const { busy, run } = useAction();
 const confirm = useConfirm();
-const sources = ref<Entity[]>([]);
+const { data: sources } = useResource(() => get<Entity[]>('/sources'), []);
+const {
+  data: detail,
+  loading: detailLoading,
+  error: detailError,
+  reload: reloadDetail,
+} = useResource(
+  () =>
+    route.query.selected ? get<any>('/agents/' + route.query.selected) : Promise.resolve(null),
+  null,
+);
 const q = ref(''),
   status = ref<string | null>(null);
 const filtered = computed(() =>
@@ -48,8 +59,7 @@ const filtered = computed(() =>
 const editorOpen = ref(false),
   generating = ref(true),
   editing = ref<Entity | null>(null),
-  detail = ref<any>(null),
-  detailOpen = ref(false),
+  detailOpen = ref(!!route.query.selected),
   compare = ref(false);
 const compared = ref<string[]>([]);
 function create(generate: boolean) {
@@ -62,12 +72,16 @@ function edit(a: Entity) {
   editing.value = a;
   editorOpen.value = true;
 }
-async function show(a: Entity) {
-  await run(async () => {
-    detail.value = await get('/agents/' + a.id);
-    detailOpen.value = true;
-  });
+function show(a: Entity) {
+  void router.push({ query: { ...route.query, selected: a.id } });
 }
+watch(
+  () => route.query.selected,
+  (id) => {
+    detailOpen.value = !!id;
+    void reloadDetail();
+  },
+);
 async function chat(a: Entity) {
   await run(async () => {
     const c = await post('/conversations', {
@@ -96,23 +110,16 @@ async function del(a: Entity) {
   );
 }
 onMounted(() => {
-  void run(async () => {
-    sources.value = await get('/sources');
-  });
   if (route.query.source) create(true);
-  if (route.query.selected)
-    void run(async () => {
-      detail.value = await get('/agents/' + route.query.selected);
-      detailOpen.value = true;
-    });
 });
 </script>
 <template>
   <PageHeader
     eyebrow="THOUGHT PARTNERS"
-    title="思想智能体"
+    title="智能体管理"
     description="以不同的知识、框架和边界，回应同一个真实问题。"
   >
+    <n-button @click="router.push(switchArea(route, 'front'))">前台查看</n-button>
     <n-button @click="create(false)">
       <template #icon><Plus :size="16" /></template>
       手动组合
@@ -255,97 +262,80 @@ onMounted(() => {
     :agent="editing"
     :generate="generating"
     :source-id="String(route.query.source || '') || undefined"
-    @saved="reload(true)"
-    @job="(job) => router.push('/jobs?selected=' + job.id)"
+    :distillation-id="String(route.query.distillation || '') || undefined"
+    @saved="
+      reload(true);
+      reloadDetail(true);
+    "
+    @job="(job) => router.push(jobPath(job.id))"
   />
-  <n-drawer v-model:show="detailOpen" :width="600">
+  <n-drawer
+    v-model:show="detailOpen"
+    @update:show="
+      (value: boolean) => {
+        if (!value) void router.replace({ query: { ...route.query, selected: undefined } });
+      }
+    "
+    :width="600"
+  >
     <n-drawer-content :title="detail?.agent?.title || '智能体详情'" closable>
-      <template v-if="detail?.agent">
-        <div class="inline-actions">
-          <StatusBadge :status="detail.agent.status" />
-          <span class="muted small">
-            版本 {{ detail.agent.version }} · {{ dateText(detail.agent.updated_at) }}
-          </span>
-        </div>
-        <n-alert v-if="detail.agent.status === 'draft'" type="warning" style="margin-top: 18px">
-          这是 AI 生成或尚未发布的草稿。请核对来源与设定后保存为可用。
-        </n-alert>
-        <div
-          v-for="field in [
-            { key: 'purpose', label: '用途' },
-            { key: 'perspective', label: '分析视角' },
-            { key: 'framework', label: '思考框架' },
-            { key: 'methods', label: '常用方法' },
-            { key: 'boundaries', label: '适用边界' },
-          ]"
-          :key="field.key"
-          class="section-spaced"
-        >
-          <h3>{{ field.label }}</h3>
-          <MarkdownText
-            :text="textOf(detail.agent.data[field.key]) || '未填写'"
-            style="margin-top: 10px"
-          />
-        </div>
-        <n-alert
-          v-if="detail.knowledge_summary?.updates_available?.length"
-          type="info"
-          style="margin-top: 20px"
-        >
-          <p v-for="update in detail.knowledge_summary.updates_available" :key="update.source_id">
-            {{ update.title }}：当前绑定 v{{ update.bound_version }}，可更新到 v{{
-              update.current_version
-            }}。
-          </p>
-          <n-button size="small" style="margin-top: 10px" @click="edit(detail.agent)">
-            检查知识更新
-          </n-button>
-        </n-alert>
-        <div class="section-spaced">
-          <h3>知识范围</h3>
-          <p class="muted small">
-            {{ detail.knowledge_summary?.cards || 0 }} 张卡片 ·
-            {{ detail.knowledge_summary?.chapters || 0 }} 个章节 ·
-            {{ detail.knowledge_summary?.unreviewed || 0 }} 张待核对
-          </p>
-          <p
-            v-for="s in detail.knowledge_summary?.coverage || []"
-            :key="s.source_id"
-            class="field-hint"
+      <ResourceState :loading="detailLoading" :error="detailError" @retry="reloadDetail()">
+        <template v-if="detail?.agent">
+          <div class="inline-actions">
+            <StatusBadge :status="detail.agent.status" />
+            <span class="muted small">
+              版本 {{ detail.agent.version }} · {{ dateText(detail.agent.updated_at) }}
+            </span>
+          </div>
+          <n-alert v-if="detail.agent.status === 'draft'" type="warning" style="margin-top: 18px">
+            这是 AI 生成或尚未发布的草稿。请核对来源与设定后保存为可用。
+          </n-alert>
+          <AgentFacts :agent="detail.agent" :knowledge="detail.knowledge_summary" />
+          <n-alert
+            v-if="detail.knowledge_summary?.updates_available?.length"
+            type="info"
+            style="margin-top: 20px"
           >
-            {{ s.title }}
-          </p>
-        </div>
-        <div class="inline-actions section-spaced">
-          <n-button type="primary" @click="edit(detail.agent)">编辑版本</n-button>
-          <n-button @click="chat(detail.agent)">试聊</n-button>
-          <n-button
-            @click="
-              run(async () => {
-                await post('/agents/' + detail.agent.id + '/copy');
-                await reload();
-              }, '已创建独立副本')
-            "
-          >
-            <Copy :size="14" />
-            复制
-          </n-button>
-          <n-button @click="archive(detail.agent)">
-            <Archive :size="14" />
-            归档 / 恢复
-          </n-button>
-          <n-button
-            @click="run(() => download(`/export?kind=agent&id=${detail.agent.id}&format=zip`))"
-          >
-            <Download :size="14" />
-            导出便携包
-          </n-button>
-          <n-button type="error" @click="del(detail.agent)">
-            <Trash2 :size="14" />
-            删除
-          </n-button>
-        </div>
-      </template>
+            <p v-for="update in detail.knowledge_summary.updates_available" :key="update.source_id">
+              {{ update.title }}：当前绑定 v{{ update.bound_version }}，可更新到 v{{
+                update.current_version
+              }}。
+            </p>
+            <n-button size="small" style="margin-top: 10px" @click="edit(detail.agent)">
+              检查知识更新
+            </n-button>
+          </n-alert>
+          <div class="inline-actions section-spaced">
+            <n-button type="primary" @click="edit(detail.agent)">编辑版本</n-button>
+            <n-button @click="chat(detail.agent)">试聊</n-button>
+            <n-button
+              @click="
+                run(async () => {
+                  await post('/agents/' + detail.agent.id + '/copy');
+                  await reload();
+                }, '已创建独立副本')
+              "
+            >
+              <Copy :size="14" />
+              复制
+            </n-button>
+            <n-button @click="archive(detail.agent)">
+              <Archive :size="14" />
+              归档 / 恢复
+            </n-button>
+            <n-button
+              @click="run(() => download(`/export?kind=agent&id=${detail.agent.id}&format=zip`))"
+            >
+              <Download :size="14" />
+              导出便携包
+            </n-button>
+            <n-button type="error" @click="del(detail.agent)">
+              <Trash2 :size="14" />
+              删除
+            </n-button>
+          </div>
+        </template>
+      </ResourceState>
     </n-drawer-content>
   </n-drawer>
 </template>

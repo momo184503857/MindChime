@@ -2,17 +2,16 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { type Entity, type Reference, textOf } from '../lib/types';
-import { post, download } from '../lib/api';
+import { download } from '../lib/api';
 import { useAction } from '../lib/useData';
 import MarkdownText from './MarkdownText.vue';
 import EvidenceDrawer from './EvidenceDrawer.vue';
-import AgentEditor from './AgentEditor.vue';
+
 const props = defineProps<{ result: Entity & { cards?: Entity[] } }>();
 const router = useRouter();
 const { busy, run } = useAction();
 const evidence = ref<Reference | null>(null),
-  evidenceOpen = ref(false),
-  agentOpen = ref(false);
+  evidenceOpen = ref(false);
 const usableCards = computed(() =>
   (props.result.cards || []).filter((c) => c.status !== 'disabled'),
 );
@@ -23,15 +22,10 @@ function resolve(text: string) {
   for (const [id, title] of Object.entries(titleMap.value)) text = text.replaceAll(id, title);
   return text;
 }
-async function skill() {
-  await run(async () => {
-    const job = await post('/skills/generate', {
-      card_ids: usableCards.value.map((c) => c.id),
-      distillation_id: props.result.id,
-      purpose: props.result.data.prompt,
-      request_id: crypto.randomUUID(),
-    });
-    await router.push('/jobs?selected=' + job.id);
+function generate(kind: 'agent' | 'skill') {
+  void router.push({
+    path: kind === 'agent' ? '/admin/agents' : '/admin/skills',
+    query: { source: props.result.data.source_id, distillation: props.result.id },
   });
 }
 </script>
@@ -75,14 +69,14 @@ async function skill() {
       </n-button>
       <n-button
         :disabled="result.status !== 'completed' || !usableCards.length"
-        @click="agentOpen = true"
+        @click="generate('agent')"
       >
         用此结果生成 Agent
       </n-button>
       <n-button
         :disabled="result.status !== 'completed' || !usableCards.length"
         :loading="busy"
-        @click="skill"
+        @click="generate('skill')"
       >
         从此结果生成 Skill
       </n-button>
@@ -182,13 +176,6 @@ async function skill() {
     </details>
 
     <EvidenceDrawer v-model:show="evidenceOpen" :reference="evidence" />
-    <AgentEditor
-      v-model:show="agentOpen"
-      :source-id="result.data.source_id"
-      :distillation-id="result.id"
-      generate
-      @job="(j) => router.push('/jobs?selected=' + j.id)"
-    />
   </article>
 </template>
 <style scoped>

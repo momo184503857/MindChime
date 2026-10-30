@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { jobPath } from '../lib/navigation';
 import { computed, ref } from 'vue';
 import { get } from '../lib/api';
 import ResourceState from './ResourceState.vue';
@@ -96,7 +97,7 @@ function chapterName(value: any) {
       </n-alert>
       <RouterLink
         v-if="coverage.job_id || source.data.latest_distill_job_id"
-        :to="'/jobs?selected=' + (coverage.job_id || source.data.latest_distill_job_id)"
+        :to="jobPath(coverage.job_id || source.data.latest_distill_job_id)"
         class="text-link"
         style="display: inline-block; margin-top: 16px"
       >

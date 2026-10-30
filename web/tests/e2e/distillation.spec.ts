@@ -16,12 +16,14 @@ test('six method choices submit a book and prompt without starting a paid call',
   ).json();
   const sid = imported.source.id;
   let submitted: any;
+  let submissions = 0;
   try {
     await page.route(`**/api/v1/sources/${sid}/distill`, async (route) => {
+      submissions++;
       submitted = route.request().postDataJSON();
       await route.fulfill({ json: { id: 'ui-contract-only', status: 'queued', data: {} } });
     });
-    await page.goto('/library/' + sid);
+    await page.goto('/admin/library/' + sid);
     await page.getByRole('button', { name: '蒸馏所选章节', exact: true }).click();
     const modal = page.getByRole('dialog', { name: '确认本次蒸馏' });
     await expect(modal.getByRole('radio')).toHaveCount(6);
@@ -42,6 +44,10 @@ test('six method choices submit a book and prompt without starting a paid call',
     await expect.poll(() => submitted?.method_id).toBe('bolan');
     expect(submitted.prompt).toBe('只提取本书的判断标准与边界。');
     expect(submitted.chapter_ids).toEqual(imported.chapters.map((c: any) => c.id));
+    await expect(page).toHaveURL(/\/admin\/jobs\?selected=ui-contract-only$/);
+    await page.getByRole('link', { name: '返回前台', exact: true }).click();
+    await page.reload();
+    expect(submissions).toBe(1);
   } finally {
     await request.delete(`/api/v1/sources/${sid}?mode=derived&history=redact`);
   }
@@ -79,7 +85,7 @@ test('real distillation result shows extensions, evidence and export in both the
   expect(accessibility.violations).toEqual([]);
   if (browserName === 'chromium')
     await page.screenshot({
-      path: path.resolve('../docs/validation/distillation-results-light.png'),
+      path: path.resolve('../docs/validation/areas-distillation-results-light.png'),
       animations: 'disabled',
     });
   const exportResponse = await request.get(
@@ -94,7 +100,7 @@ test('real distillation result shows extensions, evidence and export in both the
   await expect(modal.getByRole('heading', { name: '资料总览', exact: true })).toBeVisible();
   if (browserName === 'chromium')
     await page.screenshot({
-      path: path.resolve('../docs/validation/distillation-results-dark.png'),
+      path: path.resolve('../docs/validation/areas-distillation-results-dark.png'),
       animations: 'disabled',
     });
   expect(errors).toEqual([]);
@@ -121,6 +127,7 @@ test('Agent result selection exposes only the selected result cards', async ({ p
     .getByRole('button', { name: '查看结果', exact: true })
     .click();
   await page.getByRole('button', { name: '用此结果生成 Agent', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp('/admin/agents.*distillation=' + result.id));
   const modal = page.getByRole('dialog', { name: '从知识生成思想智能体', exact: true });
   await expect(modal).toBeVisible();
   await modal

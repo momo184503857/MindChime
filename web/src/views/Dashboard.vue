@@ -9,18 +9,15 @@ import {
   MessagesSquare,
   NotebookPen,
   Plus,
-  Sparkles,
 } from 'lucide-vue-next';
-import { get, post } from '../lib/api';
-import { useResource, useAction } from '../lib/useData';
+import { get } from '../lib/api';
+import { useResource } from '../lib/useData';
 import { type Entity, dateText } from '../lib/types';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
-import JobStrip from '../components/JobStrip.vue';
 const router = useRouter();
 const { data, loading, error, reload } = useResource(() => get<any>('/dashboard'), {}, 12000);
-const { busy, run } = useAction();
 const counts = computed(() => data.value.counts || {});
 const metrics = computed(() => [
   { label: '资料', key: 'sources', alt: 'source', icon: BookOpen, to: '/library' },
@@ -32,14 +29,11 @@ const sources = computed<Entity[]>(() => data.value.sources || data.value.recent
 const conversations = computed<Entity[]>(
   () => data.value.conversations || data.value.recent_conversations || [],
 );
-const jobs = computed<Entity[]>(() => data.value.jobs || data.value.recent_jobs || []);
-async function demo() {
-  await run(async () => {
-    await post('/demo/load');
-    await reload();
-    await router.push('/library');
-  }, '原创演示资料已载入，蒸馏与对话仍需配置真实模型');
-}
+const { data: runs } = useResource(() => get<Entity[]>('/runs'), [], 12000);
+const { data: artifacts } = useResource(() => get<Entity[]>('/artifacts'), [], 12000);
+const pendingRuns = computed(() =>
+  runs.value.filter((r) => !['completed', 'disabled', 'cancelled'].includes(r.status)),
+);
 </script>
 <template>
   <PageHeader
@@ -47,9 +41,9 @@ async function demo() {
     title="把知识，带进下一次思考。"
     description="整理读过的内容，让不同的思想围绕你的真实问题展开对话。"
   >
-    <n-button type="primary" @click="router.push('/library?import=1')">
+    <n-button type="primary" @click="router.push('/admin/library?import=1')">
       <template #icon><Plus :size="17" /></template>
-      导入资料
+      去后台导入资料
     </n-button>
   </PageHeader>
   <ResourceState :loading="loading" :error="error" @retry="reload()">
@@ -73,12 +67,12 @@ async function demo() {
       <div class="journey-steps">
         <RouterLink to="/library">
           <span>01</span>
-          导入与蒸馏
+          阅读与查证
           <ArrowRight :size="15" />
         </RouterLink>
         <RouterLink to="/agents">
           <span>02</span>
-          创建思想智能体
+          选择思想智能体
           <ArrowRight :size="15" />
         </RouterLink>
         <RouterLink to="/chat">
@@ -87,23 +81,6 @@ async function demo() {
           <ArrowRight :size="15" />
         </RouterLink>
       </div>
-    </section>
-    <section
-      v-if="jobs.some((j) => !['completed', 'cancelled'].includes(j.status))"
-      class="section-spaced"
-    >
-      <div class="section-heading">
-        <h2>继续处理</h2>
-        <RouterLink to="/jobs" class="text-link">全部任务 →</RouterLink>
-      </div>
-      <JobStrip
-        v-for="job in jobs
-          .filter((j) => !['completed', 'cancelled'].includes(j.status))
-          .slice(0, 3)"
-        :key="job.id"
-        :job="job"
-        @changed="reload(true)"
-      />
     </section>
     <div class="grid-two section-spaced">
       <section>
@@ -132,10 +109,7 @@ async function demo() {
           <BookOpen :size="25" />
           <h3>给一个想法安放的位置</h3>
           <p>导入自己的书籍，或载入两份原创演示资料，体验从知识到对话的过程。</p>
-          <n-button :loading="busy" @click="demo">
-            <template #icon><Sparkles :size="15" /></template>
-            载入原创演示资料
-          </n-button>
+          <n-button @click="router.push('/admin/library?import=1')">去后台导入资料</n-button>
           <small>演示资料不是真实出版物，不包含预设模型回答。</small>
         </div>
       </section>
@@ -165,8 +139,54 @@ async function demo() {
           <MessagesSquare :size="25" />
           <h3>一个好问题，是思考的起点</h3>
           <p>创建智能体后，带上你的背景与问题，让不同知识和判断方式相互回应。</p>
-          <n-button @click="router.push('/agents')">创建第一个智能体</n-button>
+          <n-button @click="router.push('/agents')">选择思想智能体</n-button>
         </div>
+      </section>
+    </div>
+    <div class="grid-two section-spaced">
+      <section>
+        <div class="section-heading">
+          <h2>继续实践</h2>
+          <RouterLink to="/skills?tab=runs" class="text-link">实践记录 →</RouterLink>
+        </div>
+        <div class="surface item-list" v-if="pendingRuns.length">
+          <RouterLink
+            v-for="r in pendingRuns.slice(0, 4)"
+            :key="r.id"
+            :to="{ path: '/skills', query: { tab: 'runs', run: r.id } }"
+            class="list-item"
+          >
+            <div class="list-item-main">
+              <strong>{{ r.title }}</strong>
+              <p class="muted small">已完成 {{ r.data.step_index || 0 }} 步</p>
+            </div>
+            <StatusBadge :status="r.status" />
+          </RouterLink>
+        </div>
+        <p v-else class="surface panel-pad muted">还没有进行中的实践，可从方法库开始一次尝试。</p>
+      </section>
+      <section>
+        <div class="section-heading">
+          <h2>最近的成果</h2>
+          <RouterLink to="/artifacts" class="text-link">全部成果 →</RouterLink>
+        </div>
+        <div v-if="artifacts.length" class="surface item-list">
+          <RouterLink
+            v-for="a in artifacts.slice(0, 4)"
+            :key="a.id"
+            :to="{ path: '/artifacts', query: { selected: a.id } }"
+            class="list-item"
+          >
+            <div class="list-item-main">
+              <strong>{{ a.title }}</strong>
+              <p class="muted small">{{ dateText(a.updated_at) }}</p>
+            </div>
+            <ArrowUpRight :size="16" />
+          </RouterLink>
+        </div>
+        <p v-else class="surface panel-pad muted">
+          对话、实践中的收获，以及自己的笔记，都可以保存在成果中。
+        </p>
       </section>
     </div>
   </ResourceState>

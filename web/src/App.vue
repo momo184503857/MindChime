@@ -9,7 +9,6 @@ import {
   dateZhCN,
 } from 'naive-ui';
 import { useAppStore } from './stores/app';
-import Shell from './components/Shell.vue';
 const app = useAppStore();
 const theme = computed(() => ({
   common: {
@@ -39,7 +38,7 @@ const theme = computed(() => ({
     :date-locale="dateZhCN"
   >
     <NMessageProvider>
-      <NDialogProvider><Shell /></NDialogProvider>
+      <NDialogProvider><RouterView /></NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>
 </template>

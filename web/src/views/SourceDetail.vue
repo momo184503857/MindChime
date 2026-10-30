@@ -28,6 +28,8 @@ import {
   requestId,
   locationLabel,
 } from '../lib/types';
+import { orderSourceChapters } from '../lib/sourceView';
+import { jobPath, switchArea } from '../lib/navigation';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
@@ -46,18 +48,21 @@ const attributions: Record<string, string> = {
 const route = useRoute(),
   router = useRouter();
 const id = computed(() => String(route.params.id));
-const { data, loading, error, reload } = useResource(() => get<any>('/sources/' + id.value), {
-  source: null,
-  chapters: [],
-  cards: [],
-  versions: [],
-  agents: [],
-});
+const { data, loading, error, reload } = useResource(
+  async () => orderSourceChapters(await get<any>('/sources/' + id.value)),
+  {
+    source: null,
+    chapters: [],
+    cards: [],
+    versions: [],
+    agents: [],
+  },
+);
 const { busy, run, message } = useAction();
 const confirm = useConfirm();
 const selected = ref<string[]>([]),
-  activeChapter = ref<string | null>(null),
-  tab = ref('chapters'),
+  activeChapter = ref<string | null>(String(route.query.chapter || '') || null),
+  tab = ref(String(route.query.tab || 'chapters')),
   cardType = ref<string | null>(null);
 const selectedChapter = computed<Entity | undefined>(() =>
   data.value.chapters.find((c: Entity) => c.id === activeChapter.value),
@@ -74,9 +79,21 @@ const selectedChars = computed(() =>
     ),
 );
 const source = computed<Entity | null>(() => data.value.source);
+watch([tab, activeChapter], () => {
+  void router.replace({
+    query: { ...route.query, tab: tab.value, chapter: activeChapter.value || undefined },
+  });
+});
+watch(
+  () => route.query,
+  (query) => {
+    tab.value = String(query.tab || 'chapters');
+    if (query.chapter) activeChapter.value = String(query.chapter);
+  },
+);
 watch(id, () => {
   selected.value = [];
-  activeChapter.value = null;
+  activeChapter.value = String(route.query.chapter || '') || null;
   void reload();
 });
 watch(
@@ -141,7 +158,7 @@ async function distill() {
       request_id: requestId(),
     });
     distillOpen.value = false;
-    await router.push('/jobs?selected=' + job.id);
+    await router.push(jobPath(job.id));
   }, '已提交蒸馏任务');
 }
 async function rerun(result: Entity) {
@@ -162,7 +179,7 @@ async function ocr() {
           chapter_ids: selected.value,
           request_id: requestId(),
         });
-        await router.push('/jobs?selected=' + job.id);
+        await router.push(jobPath(job.id));
       });
     },
   );
@@ -175,7 +192,7 @@ async function merge() {
   await run(async () => {
     await post('/chapters/merge', { ids: selected.value });
     selected.value = [];
-    activeChapter.value = null;
+    activeChapter.value = String(route.query.chapter || '') || null;
     await reload();
   }, '章节已合并，原始定位保留');
 }
@@ -206,7 +223,7 @@ async function deleteSource() {
   await run(async () => {
     await remove(`/sources/${id.value}?mode=${deleteMode.value}&history=${history.value}`);
     deleteOpen.value = false;
-    if (deleteMode.value === 'derived') await router.push('/library');
+    if (deleteMode.value === 'derived') await router.push('/admin/library');
     else await reload();
   }, '删除请求已处理');
 }
@@ -258,9 +275,9 @@ async function restore() {
 }
 </script>
 <template>
-  <RouterLink to="/library" class="back-link">
+  <RouterLink to="/admin/library" class="back-link">
     <ChevronLeft :size="14" />
-    返回书架
+    返回资料管理
   </RouterLink>
   <ResourceState :loading="loading" :error="error" @retry="reload()">
     <template v-if="source">
@@ -269,6 +286,7 @@ async function restore() {
         :description="`${source.data.author || '作者未填写'} · ${source.data.format?.toUpperCase() || '文本资料'} · ${dateText(source.created_at)}`"
         eyebrow="SOURCE & KNOWLEDGE"
       >
+        <n-button @click="router.push(switchArea(route, 'front'))">前台查看</n-button>
         <n-button @click="editMetadata">编辑资料</n-button>
         <n-button @click="run(() => download(`/export?kind=source&id=${id}&format=markdown`))">
           <template #icon><Download :size="15" /></template>
@@ -493,7 +511,7 @@ async function restore() {
           </ResourceState>
         </n-tab-pane>
         <n-tab-pane name="distillations" tab="蒸馏结果">
-          <DistillationResults :source="source" @changed="reload()" @rerun="rerun" />
+          <DistillationResults management :source="source" @changed="reload()" @rerun="rerun" />
         </n-tab-pane>
         <n-tab-pane name="overview" tab="总览与覆盖">
           <SourceOverview :source="source" :chapters="data.chapters" :versions="data.versions" />
@@ -507,7 +525,7 @@ async function restore() {
                 <p class="muted small">{{ a.data.purpose }}</p>
               </div>
               <StatusBadge :status="a.status" />
-              <n-button size="small" @click="router.push('/agents?selected=' + a.id)">
+              <n-button size="small" @click="router.push('/admin/agents?selected=' + a.id)">
                 查看
               </n-button>
             </div>
@@ -515,7 +533,7 @@ async function restore() {
               尚未基于这份资料创建智能体。
             </div>
           </div>
-          <n-button style="margin-top: 16px" @click="router.push('/agents?source=' + id)">
+          <n-button style="margin-top: 16px" @click="router.push('/admin/agents?source=' + id)">
             从这份资料创建智能体
           </n-button>
         </n-tab-pane>

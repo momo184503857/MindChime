@@ -17,7 +17,14 @@ test('all workspace pages render without runtime errors, in both desktop themes'
     ['/skills', '实践 Skills'],
     ['/memories', '长期记忆'],
     ['/jobs', '任务中心'],
-    ['/settings', '设置'],
+    ['/settings', '模型配置'],
+    ['/admin', '管理概览'],
+    ['/admin/library', '资料与蒸馏'],
+    ['/admin/agents', '智能体管理'],
+    ['/admin/skills', 'Skill 管理'],
+    ['/admin/graph', '关系审核'],
+    ['/admin/settings', '系统设置'],
+    ['/admin/data', '数据备份与恢复'],
   ];
   for (const [path, title] of routes) {
     await page.goto(path);
@@ -49,7 +56,7 @@ test('paste a document, inspect chapters, create a user knowledge card and keep 
   const name = `UI 验收资料 ${info.project.name} ${Date.now()}`;
   let sourceId = '';
   try {
-    await page.goto('/library');
+    await page.goto('/admin/library');
     await page.getByRole('button', { name: '导入资料', exact: true }).first().click();
     await page.getByRole('tab', { name: '粘贴文本' }).click();
     await page
@@ -59,7 +66,7 @@ test('paste a document, inspect chapters, create a user knowledge card and keep 
       );
     await page.getByLabel('标题（必填）', { exact: true }).fill(name);
     await page.getByRole('button', { name: '导入并预检查' }).click();
-    await expect(page).toHaveURL(/\/library\/[^/?]+$/);
+    await expect(page).toHaveURL(/\/admin\/library\/[^/?]+/);
     sourceId = page.url().split('/').at(-1)!;
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
     await expect(page.locator('.source-text')).toContainText('验证的问题');

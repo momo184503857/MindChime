@@ -1,0 +1,38 @@
+[
+  {
+    "browser": "chromium",
+    "route": "/",
+    "navigation_key": "Tab",
+    "skip_link_keyboard": "passed"
+  },
+  {
+    "browser": "chromium",
+    "route": "/admin",
+    "navigation_key": "Tab",
+    "skip_link_keyboard": "passed"
+  },
+  {
+    "browser": "firefox",
+    "route": "/",
+    "navigation_key": "Tab",
+    "skip_link_keyboard": "passed"
+  },
+  {
+    "browser": "firefox",
+    "route": "/admin",
+    "navigation_key": "Tab",
+    "skip_link_keyboard": "passed"
+  },
+  {
+    "browser": "webkit",
+    "route": "/",
+    "navigation_key": "Alt+Tab",
+    "skip_link_keyboard": "passed"
+  },
+  {
+    "browser": "webkit",
+    "route": "/admin",
+    "navigation_key": "Alt+Tab",
+    "skip_link_keyboard": "passed"
+  }
+]

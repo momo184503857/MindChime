@@ -1,53 +1,42 @@
 <script setup lang="ts">
+import { switchArea } from '../lib/navigation';
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import {
-  ListChecks,
-  Plus,
-  Sparkles,
-  Play,
-  Download,
-  Trash2,
-  CheckCircle2,
-  ChevronRight,
-  BookOpen,
-  History,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-vue-next';
-import { get, post, patch, remove, download } from '../lib/api';
-import { useResource, useAction, useConfirm } from '../lib/useData';
+import { useRoute, useRouter } from 'vue-router';
+import { defineAsyncComponent } from 'vue';
+const SkillMaintenance = defineAsyncComponent(
+  () => import('../components/maintenance/SkillMaintenance.vue'),
+);
+const props = defineProps<{ management?: boolean }>();
+const maintenance = ref<InstanceType<typeof SkillMaintenance> | null>(null);
+import { ListChecks, Play, Download, CheckCircle2, ChevronRight, History } from 'lucide-vue-next';
+import { get, post, download } from '../lib/api';
+import { useResource, useAction } from '../lib/useData';
 import { type Entity, textOf, dateText, requestId } from '../lib/types';
 import PageHeader from '../components/PageHeader.vue';
 import ResourceState from '../components/ResourceState.vue';
 import StatusBadge from '../components/StatusBadge.vue';
 import MarkdownText from '../components/MarkdownText.vue';
-const router = useRouter();
+import PracticeJobs from '../components/PracticeJobs.vue';
+const pendingPracticeJob = ref(false);
+const router = useRouter(),
+  route = useRoute();
 const {
   data: skills,
   loading,
   error,
   reload,
 } = useResource(() => get<Entity[]>('/skills'), [], 8000);
-const { data: runs, reload: reloadRuns } = useResource(() => get<Entity[]>('/runs'), [], 4000);
+const { data: runs, reload: reloadRuns } = useResource(
+  () => (props.management ? Promise.resolve<Entity[]>([]) : get<Entity[]>('/runs')),
+  [],
+  4000,
+);
 const { busy, run, message } = useAction();
-const confirm = useConfirm();
-const cards = ref<Entity[]>([]),
-  agents = ref<Entity[]>([]);
-const tab = ref('methods'),
+const agents = ref<Entity[]>([]);
+const tab = ref(props.management ? 'methods' : String(route.query.tab || 'methods')),
   selected = ref<Entity | null>(null),
-  detailOpen = ref(false),
-  editOpen = ref(false),
-  generateOpen = ref(false);
-const title = ref(''),
-  description = ref(''),
-  limitations = ref(''),
-  inputNames = ref(''),
-  steps = ref<{ title: string; instruction: string; output: string }[]>([]),
-  cardIds = ref<string[]>([]),
-  agentId = ref<string | null>(null),
-  purpose = ref('');
-const completionCriteria = ref('');
+  detailOpen = ref(false);
+const agentId = ref<string | null>(null);
 const startOpen = ref(false),
   startSkill = ref<Entity | null>(null),
   startInputs = ref<Record<string, string>>({});
@@ -58,13 +47,10 @@ const practiceOpen = ref(false),
   useAI = ref(false);
 const practiceSteps = computed(() => practice.value?.data.skill_snapshot?.data.steps || []);
 const currentStep = computed(() => practiceSteps.value[practice.value?.data.step_index || 0]);
-const methodCards = computed(() =>
-  cards.value.filter((c) => c.data.type === 'method' || cardIds.value.includes(c.id)),
-);
 onMounted(
   () =>
     void run(async () => {
-      [cards.value, agents.value] = await Promise.all([get('/cards'), get('/agents')]);
+      agents.value = await get('/agents');
     }),
 );
 watch(runs, (items) => {
@@ -73,66 +59,11 @@ watch(runs, (items) => {
     if (updated) practice.value = updated;
   }
 });
-function edit(skill: Entity | null) {
-  selected.value = skill;
-  title.value = skill?.title || '';
-  description.value = textOf(skill?.data.description);
-  limitations.value = textOf(skill?.data.limitations);
-  completionCriteria.value = textOf(skill?.data.completion_criteria);
-  inputNames.value = (skill?.data.inputs || []).map(textOf).join('\n');
-  steps.value = JSON.parse(
-    JSON.stringify(skill?.data.steps || [{ title: '第一步', instruction: '', output: '' }]),
-  );
-  cardIds.value = [...(skill?.data.card_ids || [])];
-  agentId.value = skill?.data.agent_id || null;
-  editOpen.value = true;
-}
-async function save() {
-  if (!title.value.trim() || !cardIds.value.length) {
-    message.warning('请填写名称并绑定方法知识卡');
-    return;
-  }
-  await run(async () => {
-    const chosen = cards.value.filter((c) => cardIds.value.includes(c.id));
-    const data = {
-      ...(selected.value?.data || {}),
-      description: description.value,
-      limitations: limitations.value,
-      completion_criteria: completionCriteria.value,
-      inputs: inputNames.value
-        .split('\n')
-        .map((s) => s.trim())
-        .filter(Boolean),
-      steps: steps.value,
-      card_ids: cardIds.value,
-      source_ids: [...new Set(chosen.flatMap((c) => c.data.source_ids || []))],
-      agent_id: agentId.value,
-    };
-    if (selected.value)
-      await patch('/skills/' + selected.value.id, { title: title.value, data, status: 'active' });
-    else await post('/skills', { title: title.value, data });
-    editOpen.value = false;
-    detailOpen.value = false;
-    await reload();
-  }, '实践方法已保存');
-}
-async function generate() {
-  if (!cardIds.value.length) {
-    message.warning('请至少选择一张方法卡');
-    return;
-  }
-  await run(async () => {
-    const job = await post('/skills/generate', {
-      card_ids: cardIds.value,
-      agent_id: agentId.value,
-      purpose: purpose.value,
-      request_id: requestId(),
-    });
-    generateOpen.value = false;
-    await router.push('/jobs?selected=' + job.id);
-  }, 'Skill 生成任务已提交');
-}
 function start(skill: Entity) {
+  if (props.management) {
+    void router.push({ path: '/skills', query: { selected: skill.id, start: '1' } });
+    return;
+  }
   startSkill.value = skill;
   startInputs.value = Object.fromEntries(
     (skill.data.inputs || []).map((name: string) => [name, '']),
@@ -148,6 +79,7 @@ async function startRun() {
       agent_id: agentId.value,
     });
     practiceOpen.value = true;
+    void router.replace({ query: { tab: 'runs', run: practice.value!.id } });
     startOpen.value = false;
     answer.value = '';
     reflection.value = '';
@@ -155,6 +87,8 @@ async function startRun() {
   }, '本次实践已开始');
 }
 function openRun(r: Entity) {
+  if (route.query.run !== r.id)
+    void router.replace({ query: { ...route.query, tab: 'runs', run: r.id } });
   practice.value = r;
   reflection.value = r.data.reflection || '';
   answer.value = '';
@@ -186,45 +120,57 @@ async function review() {
     await reloadRuns();
   }, '复盘已保存');
 }
-async function del(skill: Entity) {
-  await confirm('删除实践方法', '未完成的实践将停用，已有实践记录保留。原知识卡不会删除。', () =>
-    run(async () => {
-      await remove('/skills/' + skill.id);
+watch(
+  [skills, () => route.query.selected],
+  () => {
+    const skill = skills.value.find((s) => s.id === route.query.selected);
+    if (skill) {
+      const changed = selected.value?.id !== skill.id;
+      selected.value = skill;
+      if (changed) {
+        if (route.query.start && !props.management) start(skill);
+        else detailOpen.value = true;
+      }
+    } else if (!route.query.selected) {
       detailOpen.value = false;
-      await reload();
-      await reloadRuns();
-    }, '方法已删除'),
-  );
-}
-function moveStep(index: number, direction: number) {
-  const next = index + direction;
-  if (next < 0 || next >= steps.value.length) return;
-  const copy = [...steps.value];
-  [copy[index], copy[next]] = [copy[next], copy[index]];
-  steps.value = copy;
-}
+      selected.value = null;
+    }
+  },
+  { immediate: true },
+);
+watch(
+  [runs, () => route.query.run],
+  () => {
+    const item = runs.value.find((r) => r.id === route.query.run);
+    if (item && !practiceOpen.value) openRun(item);
+  },
+  { immediate: true },
+);
+watch(
+  () => route.query.tab,
+  (value) => {
+    tab.value = props.management ? 'methods' : String(value || 'methods');
+  },
+);
+watch(tab, (value) => {
+  void router.replace({ query: { ...route.query, tab: value } });
+});
 </script>
 <template>
   <PageHeader
     eyebrow="KNOWLEDGE INTO PRACTICE"
-    title="实践 Skills"
+    :title="management ? 'Skill 管理' : '实践 Skills'"
     description="把方法变成可重复的小步骤，保留每次实践的真实结果。"
   >
-    <n-button @click="edit(null)">
-      <Plus :size="16" />
-      手动创建
-    </n-button>
     <n-button
-      type="primary"
-      @click="
-        cardIds = [];
-        purpose = '';
-        agentId = null;
-        generateOpen = true;
-      "
+      v-if="management"
+      @click="router.push(switchArea(route, management ? 'front' : 'admin'))"
     >
-      <Sparkles :size="16" />
-      从方法卡生成
+      前台查看
+    </n-button>
+    <SkillMaintenance v-if="management" ref="maintenance" @changed="reload(true)" />
+    <n-button v-else @click="router.push(switchArea(route, management ? 'front' : 'admin'))">
+      管理方法
     </n-button>
   </PageHeader>
   <n-tabs v-model:value="tab" type="line">
@@ -239,7 +185,7 @@ function moveStep(index: number, direction: number) {
       >
         <template #icon><ListChecks :size="36" :stroke-width="1.3" /></template>
         <template #action>
-          <n-button type="primary" @click="generateOpen = true">从方法卡生成</n-button>
+          <n-button @click="router.push('/admin/skills')">去后台维护方法</n-button>
         </template>
         <div class="skill-grid">
           <article
@@ -281,10 +227,7 @@ function moveStep(index: number, direction: number) {
               <n-button
                 text
                 size="small"
-                @click="
-                  selected = s;
-                  detailOpen = true;
-                "
+                @click="router.push({ query: { ...route.query, selected: s.id } })"
               >
                 查看方法
               </n-button>
@@ -293,7 +236,7 @@ function moveStep(index: number, direction: number) {
         </div>
       </ResourceState>
     </n-tab-pane>
-    <n-tab-pane name="runs" :tab="`实践记录 (${runs.length})`">
+    <n-tab-pane v-if="!management" name="runs" :tab="`实践记录 (${runs.length})`">
       <ResourceState
         :empty="!runs.length"
         title="每一次实践，都有自己的记录"
@@ -317,150 +260,18 @@ function moveStep(index: number, direction: number) {
       </ResourceState>
     </n-tab-pane>
   </n-tabs>
-  <n-modal
-    v-model:show="generateOpen"
-    preset="card"
-    title="从方法知识卡生成 Skill"
-    style="width: 650px"
+  <n-drawer
+    v-model:show="detailOpen"
+    @update:show="
+      (value: boolean) => {
+        if (!value) {
+          selected = null;
+          void router.replace({ query: { ...route.query, selected: undefined, start: undefined } });
+        }
+      }
+    "
+    :width="600"
   >
-    <n-form>
-      <n-form-item label="方法知识卡">
-        <n-select
-          v-model:value="cardIds"
-          multiple
-          filterable
-          :options="cards.map((c) => ({ label: c.title, value: c.id }))"
-          placeholder="选择有步骤和适用条件的方法卡"
-        />
-      </n-form-item>
-      <n-form-item label="实践目标">
-        <n-input
-          v-model:value="purpose"
-          type="textarea"
-          :autosize="{ minRows: 3, maxRows: 6 }"
-          placeholder="希望这个方法帮助你完成什么？"
-        />
-      </n-form-item>
-      <n-form-item label="引导智能体（可选）">
-        <n-select
-          v-model:value="agentId"
-          clearable
-          :options="
-            agents
-              .filter((a) => !['draft', 'disabled', 'archived'].includes(a.status))
-              .map((a) => ({ label: a.title, value: a.id }))
-          "
-        />
-      </n-form-item>
-    </n-form>
-    <n-alert type="info" :show-icon="false">
-      生成会调用你配置的模型，输出适用条件、所需输入、步骤产物和边界。Skill
-      在产品内引导实践，不会控制电脑或自动执行外部操作。
-    </n-alert>
-    <div class="modal-footer">
-      <n-button @click="generateOpen = false">取消</n-button>
-      <n-button type="primary" :loading="busy" @click="generate">生成方法草稿</n-button>
-    </div>
-  </n-modal>
-  <n-modal
-    v-model:show="editOpen"
-    preset="card"
-    :title="selected ? '编辑实践方法' : '创建实践方法'"
-    style="width: 850px"
-  >
-    <n-form>
-      <div class="form-grid">
-        <n-form-item label="名称"><n-input v-model:value="title" :maxlength="100" /></n-form-item>
-        <n-form-item label="引导智能体">
-          <n-select
-            v-model:value="agentId"
-            clearable
-            :options="agents.map((a) => ({ label: a.title, value: a.id }))"
-          />
-        </n-form-item>
-      </div>
-      <n-form-item label="方法知识卡">
-        <n-select
-          v-model:value="cardIds"
-          multiple
-          filterable
-          :options="cards.map((c) => ({ label: c.title, value: c.id }))"
-        />
-      </n-form-item>
-      <n-form-item label="适用问题与说明">
-        <n-input v-model:value="description" type="textarea" />
-      </n-form-item>
-      <div class="form-grid">
-        <n-form-item label="开始前需要的信息（每行一项）">
-          <n-input v-model:value="inputNames" type="textarea" placeholder="当前目标&#10;现实限制" />
-        </n-form-item>
-        <n-form-item label="不适用情况与停止条件">
-          <n-input v-model:value="limitations" type="textarea" />
-        </n-form-item>
-      </div>
-      <n-form-item label="完成标准">
-        <n-input
-          v-model:value="completionCriteria"
-          type="textarea"
-          placeholder="哪些可观察结果代表本次方法已执行完成？"
-        />
-      </n-form-item>
-      <div class="section-heading">
-        <h3>实践步骤</h3>
-        <n-button
-          size="small"
-          :disabled="steps.length >= 20"
-          @click="steps.push({ title: '', instruction: '', output: '' })"
-        >
-          <Plus :size="13" />
-          添加步骤
-        </n-button>
-      </div>
-      <div v-for="(step, index) in steps" :key="index" class="step-editor">
-        <div class="step-editor-head">
-          <strong>步骤 {{ index + 1 }}</strong>
-          <div class="inline-actions">
-            <n-button
-              size="tiny"
-              :disabled="index === 0"
-              @click="moveStep(index, -1)"
-              aria-label="上移步骤"
-            >
-              <ArrowUp :size="12" />
-            </n-button>
-            <n-button
-              size="tiny"
-              :disabled="index === steps.length - 1"
-              @click="moveStep(index, 1)"
-              aria-label="下移步骤"
-            >
-              <ArrowDown :size="12" />
-            </n-button>
-            <n-button
-              size="tiny"
-              :disabled="steps.length <= 1"
-              @click="steps.splice(index, 1)"
-              aria-label="删除步骤"
-            >
-              <Trash2 :size="12" />
-            </n-button>
-          </div>
-        </div>
-        <n-form-item label="步骤标题"><n-input v-model:value="step.title" /></n-form-item>
-        <n-form-item label="操作说明">
-          <n-input v-model:value="step.instruction" type="textarea" />
-        </n-form-item>
-        <n-form-item label="预期产物 / 完成标准">
-          <n-input v-model:value="step.output" />
-        </n-form-item>
-      </div>
-    </n-form>
-    <div class="modal-footer">
-      <n-button @click="editOpen = false">取消</n-button>
-      <n-button type="primary" :loading="busy" @click="save">保存并启用</n-button>
-    </div>
-  </n-modal>
-  <n-drawer v-model:show="detailOpen" :width="600">
     <n-drawer-content :title="selected?.title" closable>
       <template v-if="selected">
         <n-alert v-if="selected.status === 'disabled'" type="warning">
@@ -485,8 +296,14 @@ function moveStep(index: number, direction: number) {
           >
             开始实践
           </n-button>
-          <n-button @click="edit(selected)">
+          <n-button v-if="management" @click="maintenance?.edit(selected)">
             {{ selected.status === 'disabled' ? '修复依赖' : '编辑方法' }}
+          </n-button>
+          <n-button
+            v-if="!management"
+            @click="router.push({ path: '/admin/skills', query: { selected: selected.id } })"
+          >
+            维护此方法
           </n-button>
           <n-button
             @click="
@@ -498,12 +315,15 @@ function moveStep(index: number, direction: number) {
             <Download :size="14" />
             导出 SKILL.md
           </n-button>
-          <n-button type="error" @click="del(selected)">删除</n-button>
+          <n-button v-if="management" type="error" @click="maintenance?.del(selected)">
+            删除
+          </n-button>
         </div>
       </template>
     </n-drawer-content>
   </n-drawer>
   <n-modal
+    v-if="!management"
     v-model:show="startOpen"
     preset="card"
     :title="'开始实践 · ' + (startSkill?.title || '')"
@@ -539,7 +359,16 @@ function moveStep(index: number, direction: number) {
       <n-button type="primary" :loading="busy" @click="startRun">开始记录</n-button>
     </div>
   </n-modal>
-  <n-drawer v-model:show="practiceOpen" :width="720">
+  <n-drawer
+    v-if="!management"
+    v-model:show="practiceOpen"
+    @update:show="
+      (value: boolean) => {
+        if (!value) void router.replace({ query: { ...route.query, run: undefined } });
+      }
+    "
+    :width="720"
+  >
     <n-drawer-content :title="practice?.title || '实践记录'" closable>
       <template v-if="practice">
         <div class="inline-actions">
@@ -582,6 +411,11 @@ function moveStep(index: number, direction: number) {
             <MarkdownText :text="result.guidance" />
           </div>
         </div>
+        <PracticeJobs
+          :run-id="practice.id"
+          @pending="pendingPracticeJob = $event"
+          @changed="reloadRuns()"
+        />
         <section v-if="currentStep && practice.status !== 'disabled'" class="current-step">
           <p class="eyebrow">STEP {{ practice.data.step_index + 1 }}</p>
           <h2>{{ currentStep.title }}</h2>
@@ -596,7 +430,13 @@ function moveStep(index: number, direction: number) {
             />
           </n-form-item>
           <n-checkbox v-model:checked="useAI">请 AI 基于本步结果给出引导（会调用模型）</n-checkbox>
-          <n-button type="primary" :loading="busy" @click="advance" style="margin-top: 16px">
+          <n-button
+            type="primary"
+            :loading="busy"
+            :disabled="pendingPracticeJob"
+            @click="advance"
+            style="margin-top: 16px"
+          >
             保存本步并继续
           </n-button>
         </section>

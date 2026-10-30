@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router';
+import { watch } from 'vue';
+const route = useRoute(),
+  router = useRouter();
 import { ref, computed } from 'vue';
 import { NotebookPen, Plus, Search, Download, Trash2, Quote, ArrowUpRight } from 'lucide-vue-next';
 import { get, post, patch, remove, download } from '../lib/api';
@@ -67,6 +71,7 @@ async function save() {
       : await post<Entity>('/artifacts', body);
     editing.value = false;
     selected.value = item;
+    await router.replace({ query: { ...route.query, selected: item.id } });
     await reload();
   }, '成果已保存');
 }
@@ -83,11 +88,22 @@ async function del(a: Entity) {
   await confirm('删除成果', `删除“${a.title}”，不影响原会话和资料。`, () =>
     run(async () => {
       await remove('/artifacts/' + a.id);
-      if (selected.value?.id === a.id) selected.value = null;
+      if (selected.value?.id === a.id) {
+        selected.value = null;
+        await router.replace({ query: { ...route.query, selected: undefined } });
+      }
       await reload();
     }, '成果已删除'),
   );
 }
+watch(
+  [artifacts, () => route.query.selected],
+  () => {
+    const item = artifacts.value.find((a) => a.id === route.query.selected);
+    if (item) selected.value = item;
+  },
+  { immediate: true },
+);
 </script>
 <template>
   <PageHeader
@@ -129,7 +145,7 @@ async function del(a: Entity) {
           :key="a.id"
           class="artifact-card surface"
           :class="{ selected: selected?.id === a.id }"
-          @click="selected = a"
+          @click="router.push({ query: { ...route.query, selected: a.id } })"
         >
           <span class="eyebrow">{{ typeLabels[a.data.type] || '个人笔记' }}</span>
           <h3>{{ a.title }}</h3>
