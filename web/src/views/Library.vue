@@ -197,12 +197,14 @@ onMounted(() => {
         </HelpTip>
       </n-tab-pane>
       <n-tab-pane name="text" tab="粘贴文本">
-        <n-input
-          v-model:value="text"
-          type="textarea"
-          placeholder="粘贴你的资料正文，个人备注请留在资料信息中。"
-          :autosize="{ minRows: 8, maxRows: 15 }"
-        />
+        <n-form-item label="资料正文">
+          <n-input
+            v-model:value="text"
+            type="textarea"
+            placeholder="粘贴你的资料正文，个人备注请留在资料信息中。"
+            :autosize="{ minRows: 8, maxRows: 15 }"
+          />
+        </n-form-item>
       </n-tab-pane>
     </n-tabs>
     <div class="form-grid" style="margin-top: 20px">

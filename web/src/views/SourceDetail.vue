@@ -569,7 +569,12 @@ async function restore() {
     <n-alert v-if="selectedChars > 500000" type="error" style="margin-top: 16px">
       超过默认 50 万字符限制，请缩小章节范围。
     </n-alert>
-    <n-radio-group v-model:value="distillationType" style="margin-bottom:20px"><n-radio-button value="knowledge">知识蒸馏</n-radio-button><n-radio-button value="thought">思想蒸馏 · 女娲</n-radio-button></n-radio-group>
+    <n-form-item label="蒸馏类型">
+      <n-radio-group v-model:value="distillationType">
+        <n-radio-button value="knowledge">知识蒸馏</n-radio-button>
+        <n-radio-button value="thought">思想蒸馏 · 女娲</n-radio-button>
+      </n-radio-group>
+    </n-form-item>
     <template v-if="distillationType === 'knowledge'">
     <DistillationMethodPicker v-model="methodId" :methods="methods" />
     <n-form style="margin-top: 20px">

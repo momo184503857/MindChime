@@ -406,7 +406,7 @@ async function restore() {
             除向量检索外，留空的用途会沿用默认模型。图片识别需选择支持图片输入的模型；向量检索必须配置对应能力。
           </HelpTip>
         </div>
-        <n-form label-placement="top">
+        <n-form>
           <n-form-item label="默认生成模型">
             <n-select
               v-model:value="selectedDefault"
@@ -633,13 +633,14 @@ async function restore() {
           placeholder="只交给独立 AI 服务保存"
         />
       </n-form-item>
-      <label class="field-label">模型能力声明</label>
-      <div class="chip-row" style="margin-bottom: 20px">
-        <n-checkbox v-model:checked="model.stream">流式文本</n-checkbox>
-        <n-checkbox v-model:checked="model.json">JSON 输出</n-checkbox>
-        <n-checkbox v-model:checked="model.vision">图片输入</n-checkbox>
-        <n-checkbox v-model:checked="model.embedding">文本向量</n-checkbox>
-      </div>
+      <n-form-item label="模型能力声明">
+        <div class="chip-row">
+          <n-checkbox v-model:checked="model.stream">流式文本</n-checkbox>
+          <n-checkbox v-model:checked="model.json">JSON 输出</n-checkbox>
+          <n-checkbox v-model:checked="model.vision">图片输入</n-checkbox>
+          <n-checkbox v-model:checked="model.embedding">文本向量</n-checkbox>
+        </div>
+      </n-form-item>
       <div class="form-grid">
         <n-form-item label="上下文 Token 上限">
           <n-input-number v-model:value="model.context_tokens" :min="1024" :step="1024" />

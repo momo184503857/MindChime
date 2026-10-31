@@ -235,12 +235,14 @@ watch(
       </div>
       <n-tabs type="line">
         <n-tab-pane name="edit" tab="编辑 Markdown">
-          <n-input
-            v-model:value="content"
-            type="textarea"
-            :autosize="{ minRows: 14, maxRows: 24 }"
-            placeholder="写下你自己的理解、前提与行动…"
-          />
+          <n-form-item label="内容（支持 Markdown）">
+            <n-input
+              v-model:value="content"
+              type="textarea"
+              :autosize="{ minRows: 14, maxRows: 24 }"
+              placeholder="写下你自己的理解、前提与行动…"
+            />
+          </n-form-item>
         </n-tab-pane>
         <n-tab-pane name="preview" tab="阅读预览">
           <MarkdownText :text="content || '还没有内容。'" />

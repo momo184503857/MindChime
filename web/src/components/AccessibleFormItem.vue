@@ -18,7 +18,7 @@ function connectLabel() {
     });
   });
   const fields = el.querySelectorAll<HTMLInputElement>(
-    'input:not([type="hidden"]),textarea,[role="combobox"],[role="switch"]',
+    'input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]),textarea,[role="combobox"],[role="switch"],[role="radiogroup"]',
   );
   fields.forEach((field, index) => {
     if (!field.hasAttribute('aria-label')) field.setAttribute('aria-labelledby', labelId);
@@ -32,7 +32,14 @@ onMounted(connectLabel);
 onUpdated(connectLabel);
 </script>
 <template>
-  <NFormItem ref="root" v-bind="$attrs">
+  <NFormItem
+    ref="root"
+    v-bind="$attrs"
+    class="horizontal-field"
+    label-placement="left"
+    label-align="right"
+    label-width="100%"
+  >
     <template #label v-if="$slots.label"><slot name="label" /></template>
     <slot />
     <template #feedback v-if="$slots.feedback"><slot name="feedback" /></template>

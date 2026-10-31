@@ -65,15 +65,14 @@ function remove(index: number) {
         </n-button>
       </div>
       <div v-if="editing" class="action-item-details">
-        <label class="field-label">
-          计划日期
+        <n-form-item label="计划日期">
           <input
             class="date-input"
             type="date"
             :value="item.due_date"
             @change="update(index, 'due_date', ($event.target as HTMLInputElement).value)"
           />
-        </label>
+        </n-form-item>
         <n-form-item label="实际结果">
           <n-input
             :value="item.result"
@@ -149,8 +148,8 @@ function remove(index: number) {
   color: var(--text);
   background: var(--surface);
   font: inherit;
-  margin: 7px 0 18px;
-  width: 190px;
+  width: min(100%, 190px);
+  min-width: 0;
 }
 .action-item-record {
   padding-left: 26px;

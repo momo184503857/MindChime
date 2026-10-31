@@ -383,7 +383,7 @@ a:focus-visible {
 }
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0 20px;
 }
 .form-grid .span-two {
@@ -670,6 +670,20 @@ a:focus-visible {
 }
 .n-form-item {
   min-width: 0;
+}
+.horizontal-field {
+  --form-label-width: 160px;
+}
+.n-form-item.horizontal-field.n-form-item--left-labelled {
+  grid-template-columns: min(var(--form-label-width), 30%) minmax(0, 1fr);
+}
+.horizontal-field > .n-form-item-label {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.horizontal-field > .n-form-item-blank {
+  min-width: 0;
+  gap: 8px;
 }
 @media (max-width: 1200px) {
   .app-shell {

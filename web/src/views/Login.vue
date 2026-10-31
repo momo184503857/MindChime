@@ -41,24 +41,26 @@ async function submit() {
       <h1>让知识，进入下一次思考。</h1>
       <p class="muted">登录你的本地工作区。</p>
       <form @submit.prevent="submit">
-        <label for="username">账号</label>
-        <n-input
-          id="username"
-          v-model:value="username"
-          autocomplete="username"
-          placeholder="输入账号"
-          :input-props="{ 'aria-label': '账号' }"
-        />
-        <label for="password">密码</label>
-        <n-input
-          id="password"
-          v-model:value="password"
-          type="password"
-          autocomplete="current-password"
-          show-password-on="click"
-          placeholder="输入密码"
-          :input-props="{ 'aria-label': '密码' }"
-        />
+        <n-form-item label="账号" :show-feedback="false">
+          <n-input
+            id="username"
+            v-model:value="username"
+            autocomplete="username"
+            placeholder="输入账号"
+            :input-props="{ 'aria-label': '账号' }"
+          />
+        </n-form-item>
+        <n-form-item label="密码" :show-feedback="false">
+          <n-input
+            id="password"
+            v-model:value="password"
+            type="password"
+            autocomplete="current-password"
+            show-password-on="click"
+            placeholder="输入密码"
+            :input-props="{ 'aria-label': '密码' }"
+          />
+        </n-form-item>
         <p v-if="error" role="alert" class="error-text">{{ error }}</p>
         <n-button
           attr-type="submit"
@@ -102,9 +104,8 @@ form {
 form > .n-button {
   margin-top: 16px;
 }
-label {
-  margin-top: 8px;
-  font-weight: 500;
+form :deep(.horizontal-field) {
+  --form-label-width: 64px;
 }
 .login-footer {
   margin-top: 28px;

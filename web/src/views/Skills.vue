@@ -431,11 +431,13 @@ watch(tab, (value) => {
               哪些方法有用，哪些前提不成立？无需把所有结果都归因于自己。
             </HelpTip>
           </div>
-          <n-input
-            v-model:value="reflection"
-            type="textarea"
-            :autosize="{ minRows: 4, maxRows: 10 }"
-          />
+          <n-form-item label="复盘记录">
+            <n-input
+              v-model:value="reflection"
+              type="textarea"
+              :autosize="{ minRows: 4, maxRows: 10 }"
+            />
+          </n-form-item>
           <n-button :loading="busy" @click="review" style="margin-top: 14px">保存复盘</n-button>
         </section>
       </template>

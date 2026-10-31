@@ -4,45 +4,44 @@ defineProps<{ methods: DistillationMethod[]; modelValue: string }>();
 defineEmits(['update:modelValue']);
 </script>
 <template>
-  <fieldset class="method-picker">
-    <legend>蒸馏方法</legend>
-    <div
-      v-for="method in methods"
-      :key="method.id"
-      class="method-option"
-      :class="{ chosen: modelValue === method.id }"
-    >
-      <label class="method-choice">
-        <input
-          type="radio"
-          name="distillation-method"
-          :aria-label="method.name"
-          :value="method.id"
-          :checked="modelValue === method.id"
-          @change="$emit('update:modelValue', method.id)"
-        />
-        <strong>{{ method.name }}</strong>
-      </label>
-      <HelpTip :label="method.name + '方法说明'">
-        {{ method.description }}
-        <br />
-        调用量：{{ method.cost }} · v{{ method.version }}
-      </HelpTip>
-    </div>
-  </fieldset>
+  <n-form-item label="蒸馏方法">
+    <fieldset class="method-picker" aria-label="蒸馏方法">
+      <div
+        v-for="method in methods"
+        :key="method.id"
+        class="method-option"
+        :class="{ chosen: modelValue === method.id }"
+      >
+        <label class="method-choice">
+          <input
+            type="radio"
+            name="distillation-method"
+            :aria-label="method.name"
+            :value="method.id"
+            :checked="modelValue === method.id"
+            @change="$emit('update:modelValue', method.id)"
+          />
+          <strong>{{ method.name }}</strong>
+        </label>
+        <HelpTip :label="method.name + '方法说明'">
+          {{ method.description }}
+          <br />
+          调用量：{{ method.cost }} · v{{ method.version }}
+        </HelpTip>
+      </div>
+    </fieldset>
+  </n-form-item>
 </template>
 <style scoped>
 .method-picker {
   border: 0;
   padding: 0;
-  margin: 0 0 24px;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 12px;
-}
-legend {
-  font-weight: 600;
-  padding: 0 0 12px;
 }
 .method-option {
   display: flex;
